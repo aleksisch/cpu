@@ -105,8 +105,10 @@ int stack_pop (stack_t* this_, elem_t* element)
     if ( (err = stack_ok(this_)) != 0)
         return err;
     if (stack_empty(this_) == 1)
+    {
+        stack_perror(this_, UNDERFLOW_);
         return UNDERFLOW_;
-
+    }
     if (this_->stk_size >= 3*this_->counter)
         if (err = stack_down_size(this_))
             return err;
@@ -271,7 +273,6 @@ int stack_ok(stack_t* this_)
 
     #ifdef NDEBUG
 
-    stack_perror (this_, error);
     return error;
 
     #else
@@ -321,23 +322,27 @@ Print all information about stack and error
 void stack_perror(stack_t* this_, int error)
 {
     #ifdef NDEBUG
-    return;
-    #endif // NDEBUG
+
+    errno |=error;
+
+    #else
 
     #define GET_ERROR( err, descr )  if (error & err) printf("ERROR: " #err " (%04x|%04x): " descr "\n", error, err)
 
 
-    GET_ERROR (OVERFLOW_,  "Overflow in array");
-    GET_ERROR (UNDERFLOW_, "Underflow in array");
-    GET_ERROR (NULL_STACK, "pointer on data in stack is null");
-    GET_ERROR (CANARY_ERROR, "bad canary, someone break memory");
-    GET_ERROR (HASH_ERROR, "bad hash, perhaps you are under attack");
-    GET_ERROR (REALLOC_ERROR, "problem with reallocate memory");
-    GET_ERROR (BAD_POINTER, "Pointer on data was broken");
-    GET_ERROR (HASH_STRUCT_ERROR, "Struct was broken");
-    GET_ERROR (ERROR_IN_CHANGE_SIZE, "can't change stack size");
-
+    GET_ERROR (OVERFLOW_,               "Overflow in array");
+    GET_ERROR (UNDERFLOW_,              "Underflow in array");
+    GET_ERROR (NULL_STACK,              "Pointer on data in stack is null");
+    GET_ERROR (CANARY_ERROR,            "Bad canary, someone break memory");
+    GET_ERROR (HASH_ERROR,              "Bad hash, perhaps you are under attack");
+    GET_ERROR (REALLOC_ERROR,           "Problem with reallocate memory");
+    GET_ERROR (BAD_POINTER,             "Pointer on data was broken");
+    GET_ERROR (HASH_STRUCT_ERROR,       "Struct was broken");
+    GET_ERROR (ERROR_IN_CHANGE_SIZE,    "can't change stack size");
     STACK_DUMP(this_);
+    #endif // NDEBUG
+
+    #undef GET_ERROR
 }
 
 void stack_dump (stack_t* this_)

@@ -1,32 +1,27 @@
 #include "main_proc.h"
+#include "onegin.h"
 
-int CPU(char* binary_filename, char* result_file)
+int CPU(cpu_struct *processor, char* binary_file, char* result_file)
 {
-    int* command_array = nullptr;
     int size = 0;
-    read_command_file(&command_array, &size, binary_filename);
-    int counter = 0;
-    printf("%d", command_array);
-    while (size > counter)
-    {
-        #define DEF(name, num, elements, code) code
-    }
-}
+    int *elem = (int*) readFile (binary_file, &size, "r+b");
+    size /= 4;
 
-int read_command_file(int** command_array, int *size, char* binary_filename)
-{
-    FILE *input_file = fopen (binary_filename, "r+b");
-
-    if (input_file == nullptr)
+    FILE *output_file = fopen(result_file, "w");
+    if (output_file == nullptr)
         return 1;
+    int counter = 0;
+    while (counter < size)
+    {
+        if (0);
+        #define DEF(name, num, elements, code)  \
+        else if (num == elem[counter]) \
+            code
 
-    fseek (input_file, 0L, SEEK_END);
-
-    *size = ((int) ftell(input_file)) / sizeof(int);
-
-    *command_array = (int *) calloc(*size, sizeof(int));
-
-    fseek (input_file, 0L, SEEK_SET);
-
-    fread (*command_array, sizeof(int), *size, input_file);
+        #include "proc_commands.h"
+        else printf("ERROR in command number %d", elem[counter++]);
+    }
+    int result = 0;
+    stack_pop(&processor->cpu_stack, &result);
+    fprintf(output_file, "%d", result);
 }

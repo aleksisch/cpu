@@ -5,5 +5,6 @@ int main()
 {
     make_binary_file();
     disassembler();
-    CPU();
+    cpu_struct proc; // auto construct
+    CPU(&proc);
 }

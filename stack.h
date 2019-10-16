@@ -4,7 +4,7 @@
 
 #define STACK_CONSTRUCT(name) stack_construct(name, #name)
 
-//#define NDEBUG
+#define NDEBUG
 
 #ifdef NDEBUG
 #define STACK_DUMP(this)
@@ -19,7 +19,7 @@
 #include <math.h>
 #include <string.h>
 #include <assert.h>
-typedef long long int elem_t;           //set default stack type
+typedef int elem_t;               //set default stack type
 const int STD_LENGTH_STACK = 20;            //default stack length
 const int POISON_BYTE      = 127;           //poison for memset
 const int POISON_STACK     = 2354678786532; //canary in stack
