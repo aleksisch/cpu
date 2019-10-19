@@ -14,7 +14,7 @@
 #endif
 
 
-#include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
@@ -22,7 +22,7 @@
 typedef int elem_t;               //set default stack type
 const int STD_LENGTH_STACK = 20;            //default stack length
 const int POISON_BYTE      = 127;           //poison for memset
-const int POISON_STACK     = 2354678786532; //canary in stack
+const int POISON_STACK     = 2354686532; //canary in stack
 
 struct stack_t
 {
@@ -39,16 +39,16 @@ struct stack_t
 
 enum err_list
 {
-    UNDERFLOW_           = 1 << 0,                       //1
-    STACK_OK             = 1 << 1,                       //2
-    OVERFLOW_            = 1 << 2,                        //4
-    NULL_STACK           = 1 << 3,                       //8
-    CANARY_ERROR         = 1 << 4,                       //16
-    HASH_ERROR           = 1 << 5,                      //32
-    REALLOC_ERROR        = 1 << 6,                       //64
-    BAD_POINTER          = 1 << 7,                      //128
-    HASH_STRUCT_ERROR    = 1 << 8,                     //256
-    ERROR_IN_CHANGE_SIZE = 1 << 9                      //512
+    UNDERFLOW_           = 1 << 0,
+    STACK_OK             = 1 << 1,
+    OVERFLOW_            = 1 << 2,
+    NULL_STACK           = 1 << 3,
+    CANARY_ERROR         = 1 << 4,
+    HASH_ERROR           = 1 << 5,
+    REALLOC_ERROR        = 1 << 6,
+    BAD_POINTER          = 1 << 7,
+    HASH_STRUCT_ERROR    = 1 << 8,
+    ERROR_IN_CHANGE_SIZE = 1 << 9
 };
 
 int   stack_empty        (stack_t* this_);
@@ -56,7 +56,7 @@ void  stack_dump         (stack_t* this_);
 int   stack_destroy      (stack_t* this_);
 int   stack_up_size      (stack_t* this_);
 int   stack_down_size    (stack_t* this_);
-int   stack_construct    (stack_t* this_, char* this_name = "Unknown");
+int   stack_construct    (stack_t* this_, const char* this_name = "Unknown");
 int   stack_push         (stack_t* this_, elem_t element);
 int   stack_pop          (stack_t* this_, elem_t* element);
 

@@ -1,14 +1,16 @@
 #ifndef CONSTANTS_H_INCLUDED
 #define CONSTANTS_H_INCLUDED
-static char* INPUT_FILE        = "input.txt";
-static char* ASSEMBLER_FILE    = "assembler.bin";
-static char* OUTPUT_FILE       = "output.txt";
-static char* DISASSEMBLER_FILE = "disassemble.txt";
-static int S_LENGTH = 255;
+static const char* INPUT_FILE        = "input.txt";
+static const char* ASSEMBLER_FILE    = "assembler.bin";
+static const char* OUTPUT_FILE       = "output.txt";
+static const char* DISASSEMBLER_FILE = "disassembler.txt";
+static int S_LENGTH            = 255;                //maximum string length
+static int AVG_COMMAND         = 3;                  //average argument in command
 enum commands
 {
     #define DEF(name,num,elements,code) CMD_##name = num,
     #include "proc_commands.h"
+    #undef DEF
 };
 
 enum errors

@@ -12,7 +12,7 @@
 */
 
 
-void work_file(int *size, struct pointer** lineptr, char** text, char* input, int* countline)
+void work_file(int *size, struct pointer_on_line** lineptr, char** text, const char* input, int* countline)
 {
     assert(size);
     assert(lineptr);
@@ -23,7 +23,7 @@ void work_file(int *size, struct pointer** lineptr, char** text, char* input, in
 
     *countline = get_line (*text, *size);
 
-    *lineptr = (struct pointer*) calloc (*countline, sizeof(struct pointer));
+    *lineptr = (struct pointer_on_line*) calloc (*countline, sizeof(struct pointer_on_line));
 
     get_ptr(*text, *lineptr, *size);
 }
@@ -36,7 +36,7 @@ Read input file to text
 \param[out] size size of file
 \return text
 */
-char *readFile (char* str, int *size, char* chmod)
+char *readFile (const char* str, int *size, char* chmod)
 {
     assert (size);
     assert (str);
@@ -93,20 +93,19 @@ Get pointers to the beginning of line
 \param[out] lineptr array of pointers on string
 \param[in] size length input text
 */
-void get_ptr (char* text, struct pointer* lineptr, int size)
+void get_ptr (char* text, struct pointer_on_line* lineptr, int size)
 {
     assert (text);
     assert (lineptr);
-    int l = 0, i = 0;
+    int l = 0, i = 1;
     lineptr[0].start = text;
     for (; i < size-1; i++)
     {
-        if (text[i] == '\0' && text[i+1] != '\0')
-        {
+        if (text[i] == '\0' && text[i - 1] != '\0')
             lineptr[l++].end = text + i - 1;
+        if (text[i] == '\0' && text[i + 1] != '\0')
             lineptr[l].start = text + i + 1;
-        }
     }
-    lineptr[l].end = text + i;
+ //   lineptr[l].end = text + i;
 }
 

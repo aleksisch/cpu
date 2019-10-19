@@ -9,7 +9,7 @@ Construct stack
 \param[in] this_name use define to get name of stack
 \return true or false
 */
-int stack_construct (stack_t* this_, char* this_name)
+int stack_construct (stack_t* this_, const char* this_name)
 {
     if (this_ == nullptr)
     {
@@ -353,8 +353,8 @@ void stack_dump (stack_t* this_)
         return;
     }
     printf("MEMORY DUMP\n{----------------------------------------------------------------------------\n");
-    printf("    Stack %s [%d]\n",                          this_->name, this_);
-    printf("    First address is [%d]",                    this_->data);
+    printf("    Stack %s [%p]\n",                          this_->name, this_);
+    printf("    First address is [%p]",                    this_->data);
     printf("    Current stack counter    %d\n",            this_->counter);
     printf("    Canary in struct, start: %d, end: %d\n",   this_->canary_start, this_->canary_end);
     printf("    Stack canary should be   %d \n",           POISON_STACK);
@@ -365,7 +365,7 @@ void stack_dump (stack_t* this_)
     printf("    Struct hash should be    %lld\n",          this_->hash_struct);
     printf("    Struct hash is           %lld\n",          get_hash_struct(this_));
     printf("    Stack size               %d \n",           this_->stk_size - 2);
-    printf("    Data address             %d \n",           this_->data);
+    printf("    Data address             %p \n",           this_->data);
     printf("    Stack elements:\n");
     for (int i = 1; i < this_->stk_size - 1; i++)
         printf("        [%02d] %d\n", i, this_->data[i]);
