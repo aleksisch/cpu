@@ -2,6 +2,7 @@
 #define MAIN_PROC_H_INCLUDED
 
 #include <iostream>
+#include <cmath>
 
 #include "stack.h"
 #include "constants.h"

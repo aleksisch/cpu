@@ -8,7 +8,7 @@ int make_binary_file(const char* input_name, const char* assembler_cmd, const ch
     char* text = "";
     work_file(&size, &lineptr, &text, input_name, &countline);
 
-    char*   asm_commands = (char*)      calloc(countline, sizeof(char));
+    char*   asm_commands = (char*)     calloc(countline, sizeof(char));
     elem_t* asm_arguments = (elem_t*) calloc(countline, sizeof(elem_t));
 
     int size_buf   = countline;
