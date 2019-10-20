@@ -19,10 +19,7 @@
 #include <math.h>
 #include <string.h>
 #include <assert.h>
-typedef int elem_t;               //set default stack type
-const int STD_LENGTH_STACK = 20;            //default stack length
-const int POISON_BYTE      = 127;           //poison for memset
-const int POISON_STACK     = 2354686532; //canary in stack
+#include "constants.h"
 
 struct stack_t
 {

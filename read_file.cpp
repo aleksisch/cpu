@@ -57,7 +57,7 @@ char *readFile (const char* str, int *size, char* chmod)
 
     fseek (fp, 0L, SEEK_SET);
 
-    fread (text, sizeof(char), *size + 1, fp);
+    fread (text, sizeof(char), *size, fp);
 
     text[*size] = '\0';
 

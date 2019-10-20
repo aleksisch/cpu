@@ -1,6 +1,6 @@
 DEF(PUSH, 1, 1,
    {
-        stack_push(&(processor->cpu_stack), elem[++counter]);
+        stack_push(&(processor->cpu_stack), asm_arguments[counter_arg++]);
    })
 DEF(POP, 2, 0,
     {
@@ -33,19 +33,19 @@ DEF(DIV, 6, 0,
     })
 DEF(PUSHAX, 7, 1,
     {
-        processor->reg_a = elem[++counter];
+        processor->reg_a = asm_arguments[counter_arg++];
     })
 DEF(PUSHBX, 8, 1,
     {
-        processor->reg_b = elem[++counter];
+        processor->reg_b = asm_arguments[counter_arg++];
     })
 DEF(PUSHCX, 9, 1,
     {
-        processor->reg_c = elem[++counter];
+        processor->reg_c = asm_arguments[counter_arg++];
     })
 DEF(PUSHDX, 10, 1,
     {
-        processor->reg_d = elem[++counter];
+        processor->reg_d = asm_arguments[counter_arg++];
     })
 DEF(GETAX, 11, 0,
     {

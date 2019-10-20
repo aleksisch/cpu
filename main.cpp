@@ -3,7 +3,7 @@ using namespace std;
 
 int main()
 {
-    unit_tests();
+  //  unit_tests();
     make_binary_file();
     disassembler();
     cpu_struct proc; // auto construct

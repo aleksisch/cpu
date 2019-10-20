@@ -1,33 +1,44 @@
 #include "main_proc.h"
 #include "onegin.h"
 
-int CPU(cpu_struct *processor, const char* binary_file, const char* result_file)
+int CPU(cpu_struct *processor, const char* binary_cmd,
+                               const char* binary_arg,
+                               const char* result_file)
 {
-    int size = 0;
-    int *elem = (int*) readFile (binary_file, &size, "r+b");
-    size /= 4;
+    int size_cmd = 0;
+    int size_arg = 0;
 
-    FILE *output_file = fopen(result_file, "w");
-    if (output_file == nullptr)
-        return 1;
-    int counter = 0;
+    char   *asm_commands  = (char*)   readFile (binary_cmd, &size_cmd, "r+b");
+    elem_t *asm_arguments = (elem_t*) readFile (binary_arg, &size_arg, "r+b");
+
+    size_arg /= sizeof(elem_t);
+
+    int counter_cmd = 0;
+    int counter_arg = 0;
 
     #define DEF(name, num, elements, code)  \
-    else if (num == elem[counter])          \
+    else if (num == asm_commands[counter_cmd])  \
     {                                       \
         code                                \
-        counter++;                          \
     }
 
-    while (counter < size)
+    while (counter_cmd < size_cmd)
     {
         if (0);
 
         #include "proc_commands.h"
-        else printf("ERROR in command number %d", elem[counter++]);
+        else printf("ERROR in command number %d", asm_commands[counter_cmd]);
+        counter_cmd++;
+        stack_dump(&processor->cpu_stack);
     }
     #undef DEF
     int result = 0;
     stack_pop(&processor->cpu_stack, &result);
+
+    FILE *output_file = fopen(result_file, "w");
+    if (output_file == nullptr)
+        return 1;
+
     fprintf(output_file, "%d", result);
+    fclose(output_file);
 }

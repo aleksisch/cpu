@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <iostream>
 #include <cmath>
 
 /*int split_line(pointer_on_line cur_ptr, char *&cmd_name, int *&cmd_array)
@@ -25,9 +25,7 @@
 
 int main()
 {
-        int cur_read = 0;
-
-                printf("huii %n\n\n", &cur_read);
-        printf("%d cur, \n", cur_read);
+    FILE* input = fopen("hello.bin", "w+b");
+    fwrite("sdfsdf", 1,6,input);
     system("pause");
 }
