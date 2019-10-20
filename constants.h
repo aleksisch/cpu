@@ -8,7 +8,8 @@ static const char* DISASSEMBLER_FILE = "disassembler.txt";
 static int S_LENGTH            = 255;                //maximum string length
 static int AVG_COMMAND         = 3;                  //average argument in command
 
-typedef int elem_t;                                  //set default stack type
+#define CONST_FOR_ELEM_T "%lf"
+typedef double elem_t;                                  //set default stack type
 
 const int STD_LENGTH_STACK     = 20;                     //default stack length
 const int POISON_BYTE          = 127;                    //poison for memset

@@ -4,7 +4,7 @@ void test_line_split()
 {
     char* test_string1 = "command1 command2 command3 command4 12 456 789";
     char* cmd_name = {};
-    int* cmd_array = {};
+    elem_t* cmd_array = {};
     int count = 0;
 
     pointer_on_line pointer = {};

@@ -27,11 +27,10 @@ enum errors
 struct cpu_struct
 {
     stack_t cpu_stack;
-    int reg_a;
-    int reg_b;
-    int reg_c;
-    int reg_d;
-    int last_register;      // if register free is true, else false
+    elem_t reg_a;
+    elem_t reg_b;
+    elem_t reg_c;
+    elem_t reg_d;
     cpu_struct(): reg_a(0),
                   reg_b(0),
                   reg_c(0),
@@ -45,7 +44,7 @@ struct cpu_struct
 void unit_tests();
 
 int split_line             (pointer_on_line pointer, char *cmd_name,
-                            int *&cmd_array, int *count_number);
+                            elem_t *&cmd_array, int *count_number);
 
 int make_binary_file       (const char* input_name = INPUT_FILE,
                             const char* asm_cmd = ASSEMBLER_CMD,
@@ -56,13 +55,7 @@ int disassembler           (const char* asm_cmd = ASSEMBLER_CMD,
                             const char* disasm_file = DISASSEMBLER_FILE);
 int bin_to_txt(const char* assembler_arg, const char* disasm_file, char* &result_txt);
 
-int get_array_commands     (char* text, pointer_on_line* lineptr, int size, int countline,
-                            char* array_commands, int** array_int);
-
-int read_command_file      (int** command_array, int *size, char* binary_file);
-
 int CPU                    (cpu_struct *processor, const char* binary_cmd = ASSEMBLER_CMD,
                                                    const char* binary_arg = ASSEMBLER_ARG,
                                                    const char* result_file = OUTPUT_FILE);
-
 #endif // MAIN_PROC_H_INCLUDED

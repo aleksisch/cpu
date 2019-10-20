@@ -368,7 +368,7 @@ void stack_dump (stack_t* this_)
     printf("    Data address             %p \n",           this_->data);
     printf("    Stack elements:\n");
     for (int i = 1; i < this_->stk_size - 1; i++)
-        printf("        [%02d] %d\n", i, this_->data[i]);
+        printf("        [%02d] "CONST_FOR_ELEM_T"\n", i, this_->data[i]);
 
     printf("}----------------------------------------------------------------------------\n\n\n\n");
 }

@@ -22,10 +22,9 @@
         count_number++;
     }
 }*/
-
+#define C "%d"
 int main()
 {
-    FILE* input = fopen("hello.bin", "w+b");
-    fwrite("sdfsdf", 1,6,input);
+    printf(C"\n", 123);
     system("pause");
 }

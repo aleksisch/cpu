@@ -29,16 +29,15 @@ int CPU(cpu_struct *processor, const char* binary_cmd,
         #include "proc_commands.h"
         else printf("ERROR in command number %d", asm_commands[counter_cmd]);
         counter_cmd++;
-        stack_dump(&processor->cpu_stack);
     }
     #undef DEF
-    int result = 0;
+    elem_t result = 0;
     stack_pop(&processor->cpu_stack, &result);
 
     FILE *output_file = fopen(result_file, "w");
     if (output_file == nullptr)
         return 1;
 
-    fprintf(output_file, "%d", result);
+    fprintf(output_file, CONST_FOR_ELEM_T, result);
     fclose(output_file);
 }

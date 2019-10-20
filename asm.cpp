@@ -26,9 +26,9 @@ int make_binary_file(const char* input_name, const char* assembler_cmd, const ch
     {
         char cmd_name[S_LENGTH] = "";
         elem_t* cmd_array = (elem_t*) calloc (AVG_COMMAND, sizeof(elem_t));
-
         int   count_cmd = 0;
         split_line(lineptr[line], cmd_name, cmd_array, &count_cmd);
+
         if (writed_arg / 2  > size_buf)
         {
             size_buf *= 2;
@@ -79,20 +79,20 @@ int split_line(pointer_on_line pointer, char *cmd_name, elem_t *&cmd_array, int 
     int readed = 0;
     int writed = 0;
     int num = 0;
+    elem_t temp_var = 0;
     *count_number = 0;
-    while (sscanf(cur_txt + readed, "%d", &num) == 0 && cur_txt + readed < pointer.end)
+    while (sscanf(cur_txt + readed, CONST_FOR_ELEM_T,  &temp_var) == 0 && cur_txt + readed < pointer.end)
     {
         sscanf(cur_txt + readed, "%s%n", cmd_name+writed, &num);
         readed += num + 1;
         writed += num;
     }
-
-    while (sscanf(cur_txt + readed, "%d %n", cmd_array+*count_number, &num) == 1 &&
+    while (sscanf(cur_txt + readed, CONST_FOR_ELEM_T " %n", cmd_array+*count_number, &num) == 1 &&
                   cur_txt + readed < pointer.end)
     {
         readed += num;
         (*count_number)++;
-        if (*count_number%AVG_COMMAND == 0)
+        if ((*count_number)%AVG_COMMAND == 0)
             cmd_array = (elem_t*) realloc(cmd_array, (*count_number + AVG_COMMAND) * sizeof(elem_t));
     }
 }
@@ -121,7 +121,7 @@ int bin_to_txt(const char* assembler_cmd, const char* assembler_arg, char* &resu
         int num_el = elements;                                      \
         for (;num_el != 0; num_el--)                                \
         {                                                           \
-            sprintf(result_txt + writed_c, "%d %n",                 \
+            sprintf(result_txt + writed_c, CONST_FOR_ELEM_T " %n",  \
                     asm_arguments[writed_arg++], &cur_read);        \
             writed_c += cur_read;                                   \
         }                                                           \
@@ -142,7 +142,7 @@ int bin_to_txt(const char* assembler_cmd, const char* assembler_arg, char* &resu
 
         else
         {
-            printf("ERROR elem: %d iter %d\n", asm_commands[i], i);
+            printf("ERROR elem: " CONST_FOR_ELEM_T " iter %d\n", asm_commands[i], i);
             return 1;
         }
         i++;

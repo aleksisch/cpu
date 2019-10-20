@@ -63,3 +63,9 @@ DEF(GETDX, 14, 0,
     {
         stack_push(&(processor->cpu_stack), processor->reg_d);
     })
+DEF(IN, 15, 0,
+    {
+        elem_t tmp = 0;
+        scanf(CONST_FOR_ELEM_T, &tmp);
+        stack_push(&(processor->cpu_stack), tmp);
+    })
