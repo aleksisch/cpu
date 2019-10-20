@@ -5,7 +5,7 @@ int make_binary_file(const char* input_name, const char* assembler_cmd, const ch
 {
     int size = 0, countline = 0;
     pointer_on_line* lineptr = nullptr;
-    char* text = "";
+    char* text = nullptr;
     work_file(&size, &lineptr, &text, input_name, &countline);
 
     char*   asm_commands = (char*)     calloc(countline, sizeof(char));
@@ -15,10 +15,10 @@ int make_binary_file(const char* input_name, const char* assembler_cmd, const ch
     int writed_cmd = 0;
     int writed_arg = 0;
 
-    #define DEF(name, num, elements, code)                      \
+    #define DEF(name, elements, code)                           \
     else if (strcmp(cmd_name, #name) == 0)                      \
     {                                                           \
-        asm_commands[writed_cmd++] = (char) num;                \
+        asm_commands[writed_cmd++] = (char) name;               \
         for (int read = 0; read < elements; read++)             \
             asm_arguments[writed_arg++] = cmd_array[read];      \
     }
@@ -112,8 +112,8 @@ int bin_to_txt(const char* assembler_cmd, const char* assembler_arg, char* &resu
     int i = 0;
     int writed_c   = 0;
     int writed_arg = 0;
-    #define DEF(name, num, elements, code)                          \
-    else if ((int) asm_commands[i] == num)                          \
+    #define DEF(name, elements, code)                               \
+    else if ((int) asm_commands[i] == name)                         \
     {                                                               \
         int cur_read = 0;                                           \
         sprintf(result_txt + writed_c, "%s %n", #name, &cur_read);  \

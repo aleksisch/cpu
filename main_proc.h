@@ -14,8 +14,10 @@
 
 enum commands
 {
-    #define DEF(name,num,elements,code) CMD_##name = num,
+    #define DEF(name, elements, code) name,
+
     #include "proc_commands.h"
+
     #undef DEF
 };
 

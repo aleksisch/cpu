@@ -16,10 +16,10 @@ int CPU(cpu_struct *processor, const char* binary_cmd,
     int counter_cmd = 0;
     int counter_arg = 0;
 
-    #define DEF(name, num, elements, code)  \
-    else if (num == asm_commands[counter_cmd])  \
-    {                                       \
-        code                                \
+    #define DEF(name, elements, code)            \
+    else if (name == asm_commands[counter_cmd])  \
+    {                                            \
+        code                                     \
     }
 
     while (counter_cmd < size_cmd)
