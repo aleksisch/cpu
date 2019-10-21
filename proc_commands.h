@@ -82,6 +82,10 @@ DEF(SQRT, 0,
         stack_pop(&(processor->cpu_stack), &tmp);
         stack_push(&(processor->cpu_stack), sqrt(tmp));
     })
+DEF(S_JMP, 1,
+    {
+        counter_byte = (int) *((elem_t*) (asm_text + counter_byte));
+    })
 DEF(JMP, 1,
     {
         counter_byte = *((elem_t*) (asm_text + counter_byte));

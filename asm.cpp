@@ -1,6 +1,12 @@
 #include "main_proc.h"
 #include "onegin.h"
 #include <cstdlib>
+
+struct labels
+{
+    int num;
+    char name[S_LENGTH];
+};
 int make_binary_file(const char* input_name, const char* assembler)
 {
     int size = 0, countline = 0;
@@ -13,6 +19,11 @@ int make_binary_file(const char* input_name, const char* assembler)
     char* asm_text = (char*) calloc(size_buf, sizeof(char));
 
     int writed = 0;
+
+    labels labels_arr[LABELS_LENGTH] = {};
+    labels jump_bytes[LABELS_LENGTH] = {};
+    int jump_num = 0;
+    int num_labels = 0;
 
     #define DEF(name, elements, code)                           \
     else if (strcmp(cmd_name, #name) == 0)                      \
@@ -30,20 +41,50 @@ int make_binary_file(const char* input_name, const char* assembler)
         char cmd_name[S_LENGTH] = {0};
 
         elem_t arg = 0;
-        split_line(lineptr[line], cmd_name, arg);
+        char jump_name[S_LENGTH] = {};
+        split_line(lineptr[line], cmd_name, arg, jump_name);
         if (writed * 2  > size_buf)
         {
             size_buf += countline + sizeof(elem_t);
             asm_text = (char*) realloc(asm_text, size_buf);
         }
 
-        if (0) ;
-
+        if (cmd_name[0] == ':')
+        {
+            bool flag = true;
+            for (int i = 0; i < LABELS_LENGTH; i++)
+            {
+                if (strcmp(cmd_name+1, labels_arr[i].name) == 0)
+                {
+                    labels_arr[i].num = writed;
+                    flag = false;
+                }
+            }
+            if (flag && ++num_labels < 8)
+            {
+                labels_arr[num_labels].num = writed;
+                strcpy(labels_arr[num_labels].name, cmd_name+1);
+            }
+        }
+        else if (strcmp(cmd_name, "S_JMP") == 0)
+        {
+            asm_text[writed++] = (char) S_JMP;
+            jump_bytes[jump_num].num = writed;
+            strcpy(jump_bytes[jump_num++].name, jump_name);
+            writed += sizeof(elem_t);
+        }
         #include "proc_commands.h"
         else
             printf("BAD COMMAND %s, skipped it line is %d\n", cmd_name, line);
     }
     #undef DEF
+
+    for (int i = 0; i < jump_num; i++)
+    {
+        for (int l = 0; l < LABELS_LENGTH; l++)
+            if (strcmp(jump_bytes[i].name, labels_arr[l].name) == 0)
+                *((elem_t*) (asm_text + jump_bytes[i].num)) = (elem_t) labels_arr[l].num;
+    }
     FILE *asm_file = fopen(assembler, "w+b");
     if (asm_file == nullptr)
         return 1;
@@ -71,7 +112,7 @@ int disassembler(const char* disasm_file, const char* assembler_file)
     free(result_txt);
 }
 
-int split_line(pointer_on_line pointer, char *cmd_name, elem_t &arg)
+int split_line(pointer_on_line pointer, char *cmd_name, elem_t &arg, char* jump_name)
 {
     char* cur_txt = pointer.start;
     int readed = 0;
@@ -90,6 +131,7 @@ int split_line(pointer_on_line pointer, char *cmd_name, elem_t &arg)
         if (sscanf(cur_txt+readed, "%s %n", arg_s, &tmp1) == 0)
             return NO_ARGS;
         arg = stoi(arg_s);
+        strcpy(jump_name, arg_s);
     }
 
     if (sscanf(cur_txt + readed + tmp1 + 2, "%s", tmp_char) == 1)
@@ -119,7 +161,9 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
         elem_t next = *tmp;                                             \
         char cmd_name[S_LENGTH] = #name;                                \
         int num_el = elements;                                          \
-        if (cmd_name[0] == 'S' && cmd_name[1] == '_')                   \
+        if (strcmp("S_JMP", cmd_name) == 0)                            \
+            ;                                                           \
+        else if (cmd_name[0] == 'S' && cmd_name[1] == '_')                   \
         {                                                               \
             cur_write = 0;                                              \
             sprintf(result_txt + writed, " %s%n", itos(next), &cur_write);  \
@@ -164,6 +208,7 @@ int stoi(char* str)
     #define STR_COMMANDS(str1) if (strcmp(str, #str1) == 0) return str1;
     #include "string_define.h"
     #undef STR_COMMANDS
+    return -1;
 }
 
 char* itos(int c)

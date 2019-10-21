@@ -56,7 +56,7 @@ struct cpu_struct
 
 void unit_tests();
 
-int split_line(pointer_on_line pointer, char *cmd_name, elem_t &arg);
+int split_line(pointer_on_line pointer, char *cmd_name, elem_t &arg, char* jump_name);
 int make_binary_file                   (const char* input_name = INPUT_FILE,
                                         const char* assembler = ASSEMBLER_FILE);
 int disassembler                       (const char* disasm_file = DISASSEMBLER_FILE,

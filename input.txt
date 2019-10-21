@@ -4,4 +4,7 @@ PUSH 100
 PUSH AX
 ADD
 OUT
-JMP 0
+:label
+PUSH 10
+OUT
+JMP label

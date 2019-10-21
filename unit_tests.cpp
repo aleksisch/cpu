@@ -9,7 +9,8 @@ void test_line_split()
     pointer_on_line pointer = {};
     pointer.start = test_string1;
     pointer.end = test_string1 + 11;
-    split_line(pointer, cmd_name, arg);
+    char label[S_LENGTH] = {};
+    split_line(pointer, cmd_name, arg, label);
 
     bool is_ok = true;
     if (strcmp("command1", cmd_name) != 0 || arg != 12)
@@ -22,7 +23,7 @@ void test_line_split()
     pointer.start = test_string2;
     pointer.end = test_string2 + 7;
     char cmd_name1[S_LENGTH] = {0};
-    split_line(pointer, cmd_name1, arg);
+    split_line(pointer, cmd_name1, arg, label);
 
     if (strcmp("S_PUSH", cmd_name1) != 0 || arg != stoi(test_string2 + 5))
     {
