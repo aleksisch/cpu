@@ -21,10 +21,20 @@ enum commands
     #undef DEF
 };
 
+enum str_to_i
+{
+    #define STR_COMMANDS(str) str,
+
+    #include "string_define.h"
+
+    #undef STR_COMMANDS
+};
 enum errors
 {
     OK = 0,
     BAD_INPUT_DATA,
+    EXTRA_ARG,
+    NO_ARGS
 };
 
 struct cpu_struct
@@ -46,19 +56,15 @@ struct cpu_struct
 
 void unit_tests();
 
-int split_line             (pointer_on_line pointer, char *cmd_name,
-                            elem_t *&cmd_array, int *count_number);
+int split_line(pointer_on_line pointer, char *cmd_name, elem_t &arg);
+int make_binary_file                   (const char* input_name = INPUT_FILE,
+                                        const char* assembler = ASSEMBLER_FILE);
+int disassembler                       (const char* disasm_file = DISASSEMBLER_FILE,
+                                        const char* assembler_file = ASSEMBLER_FILE);
+int bin_to_txt                         (const char* assembler_file, char* &result_txt);
 
-int make_binary_file       (const char* input_name = INPUT_FILE,
-                            const char* asm_cmd = ASSEMBLER_CMD,
-                            const char* asm_arg = ASSEMBLER_ARG);
-
-int disassembler           (const char* asm_cmd = ASSEMBLER_CMD,
-                            const char* asm_arg = ASSEMBLER_ARG,
-                            const char* disasm_file = DISASSEMBLER_FILE);
-int bin_to_txt(const char* assembler_arg, const char* disasm_file, char* &result_txt);
-
-int CPU                    (cpu_struct *processor, const char* binary_cmd = ASSEMBLER_CMD,
-                                                   const char* binary_arg = ASSEMBLER_ARG,
-                                                   const char* result_file = OUTPUT_FILE);
+int CPU (cpu_struct *processor,         const char* result_file = OUTPUT_FILE,
+                                        const char* binary_file = ASSEMBLER_FILE);
+int   stoi(char* str);
+char* itos(int c);
 #endif // MAIN_PROC_H_INCLUDED

@@ -2,33 +2,48 @@
 
 void test_line_split()
 {
-    char* test_string1 = "command1 command2 command3 command4 12 456 789";
-    char* cmd_name = {};
-    elem_t* cmd_array = {};
-    int count = 0;
+    char* test_string1 = "command1 12";
+    char cmd_name[S_LENGTH] = {0};
+    elem_t arg = 0;
 
     pointer_on_line pointer = {};
     pointer.start = test_string1;
-    pointer.end = test_string1 + 46;
+    pointer.end = test_string1 + 11;
+    split_line(pointer, cmd_name, arg);
 
-    split_line(pointer, cmd_name, cmd_array, &count);
-    if (strcmp("command1command2command3command4", cmd_name) != 0)
+    bool is_ok = true;
+    if (strcmp("command1", cmd_name) != 0 || arg != 12)
+    {
         printf("test failed");
+        is_ok = false;
+    }
 
-    if (cmd_array[0] != 12 || cmd_array[1] != 456 || cmd_array[2] != 789)
-        printf("test failed");
-    char* test_string2 = "PUSH AX 12 456 789";
+    char* test_string2 = "PUSH DX";
     pointer.start = test_string2;
-    pointer.end = test_string2 + 18;
-    split_line(pointer, cmd_name, cmd_array, &count);
-    if (strcmp("PUSHAX", cmd_name) != 0)
+    pointer.end = test_string2 + 7;
+    char cmd_name1[S_LENGTH] = {0};
+    split_line(pointer, cmd_name1, arg);
+
+    if (strcmp("S_PUSH", cmd_name1) != 0 || arg != stoi(test_string2 + 5))
+    {
+        is_ok = false;
         printf("test failed");
-    if (cmd_array[0] != 12 || cmd_array[1] != 456 || cmd_array[2] != 789)
-        printf("test failed");
+    }
+    if (is_ok)
+        printf("test passed\n");
+
 }
 
+void test_disassembler()
+{
+    make_binary_file("test_disasm.txt");
+    disassembler("out_disasm.txt");
+
+
+}
 
 void unit_tests()
 {
     test_line_split();
+//    test_disassembler();
 }

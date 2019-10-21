@@ -1,6 +1,7 @@
 DEF(PUSH, 1,
    {
-        stack_push(&(processor->cpu_stack), asm_arguments[counter_arg++]);
+        stack_push(&(processor->cpu_stack), *((elem_t*) (asm_text + counter_byte)));
+        counter_byte += sizeof(elem_t);
    })
 DEF(POP, 0,
     {
@@ -39,37 +40,29 @@ DEF(DIV, 0,
         stack_pop (&(processor->cpu_stack), &tmp2);
         stack_push(&(processor->cpu_stack),  tmp1 / tmp2);
     })
-DEF(PUSHAX, 0,
+DEF(S_PUSH, 1,
     {
-        stack_push(&(processor->cpu_stack), processor->reg_a);
+        int cmd = (int) *((elem_t*) (asm_text + counter_byte));
+        counter_byte += sizeof(elem_t);
+        elem_t* ptr_reg = nullptr;
+        if (cmd == 0) ptr_reg = &(processor->reg_a);
+        if (cmd == 1) ptr_reg = &(processor->reg_b);
+        if (cmd == 2) ptr_reg = &(processor->reg_c);
+        if (cmd == 3) ptr_reg = &(processor->reg_d);
+
+        stack_push(&(processor->cpu_stack), *ptr_reg);
     })
-DEF(PUSHBX, 0,
+DEF(S_POP, 1,
     {
-        stack_push(&(processor->cpu_stack), processor->reg_b);
-    })
-DEF(PUSHCX, 0,
-    {
-        stack_push(&(processor->cpu_stack), processor->reg_c);
-    })
-DEF(PUSHDX, 0,
-    {
-        stack_push(&(processor->cpu_stack), processor->reg_d);
-    })
-DEF(POPAX, 0,
-    {
-        stack_pop(&(processor->cpu_stack), &processor->reg_a);
-    })
-DEF(POPBX, 0,
-    {
-        stack_pop(&(processor->cpu_stack), &processor->reg_b);
-    })
-DEF(POPCX, 0,
-    {
-        stack_pop(&(processor->cpu_stack), &processor->reg_c);
-    })
-DEF(POPDX, 0,
-    {
-        stack_pop(&(processor->cpu_stack), &processor->reg_d);
+        int cmd = (int) *((elem_t*) (asm_text + counter_byte));
+        counter_byte += sizeof(elem_t);
+        elem_t* ptr_reg = nullptr;
+        if (cmd == 0) ptr_reg = &(processor->reg_a);
+        if (cmd == 1) ptr_reg = &(processor->reg_b);
+        if (cmd == 2) ptr_reg = &(processor->reg_c);
+        if (cmd == 3) ptr_reg = &(processor->reg_d);
+
+        stack_pop(&(processor->cpu_stack), ptr_reg);
     })
 DEF(IN, 0,
     {
@@ -88,4 +81,8 @@ DEF(SQRT, 0,
         elem_t tmp = 0;
         stack_pop(&(processor->cpu_stack), &tmp);
         stack_push(&(processor->cpu_stack), sqrt(tmp));
+    })
+DEF(JMP, 1,
+    {
+        counter_byte = *((elem_t*) (asm_text + counter_byte));
     })

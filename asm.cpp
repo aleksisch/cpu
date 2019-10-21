@@ -1,65 +1,63 @@
 #include "main_proc.h"
 #include "onegin.h"
-
-int make_binary_file(const char* input_name, const char* assembler_cmd, const char* assembler_arg)
+#include <cstdlib>
+int make_binary_file(const char* input_name, const char* assembler)
 {
     int size = 0, countline = 0;
     pointer_on_line* lineptr = nullptr;
     char* text = nullptr;
     work_file(&size, &lineptr, &text, input_name, &countline);
 
-    char*   asm_commands = (char*)     calloc(countline, sizeof(char));
-    elem_t* asm_arguments = (elem_t*) calloc(countline, sizeof(elem_t));
+    int size_buf   = countline + sizeof(elem_t);
 
-    int size_buf   = countline;
-    int writed_cmd = 0;
-    int writed_arg = 0;
+    char* asm_text = (char*) calloc(size_buf, sizeof(char));
+
+    int writed = 0;
 
     #define DEF(name, elements, code)                           \
     else if (strcmp(cmd_name, #name) == 0)                      \
     {                                                           \
-        asm_commands[writed_cmd++] = (char) name;               \
+        asm_text[writed++] = (char) name;                       \
         for (int read = 0; read < elements; read++)             \
-            asm_arguments[writed_arg++] = cmd_array[read];      \
+        {                                                       \
+            elem_t* ptr = (elem_t*) (asm_text + writed);        \
+            *ptr = arg;                                         \
+            writed += sizeof(elem_t);                           \
+        }                                                       \
     }
     for (int line = 0; line < countline; line++)
     {
-        char cmd_name[S_LENGTH] = "";
-        elem_t* cmd_array = (elem_t*) calloc (AVG_COMMAND, sizeof(elem_t));
-        int   count_cmd = 0;
-        split_line(lineptr[line], cmd_name, cmd_array, &count_cmd);
+        char cmd_name[S_LENGTH] = {0};
 
-        if (writed_arg / 2  > size_buf)
+        elem_t arg = 0;
+        split_line(lineptr[line], cmd_name, arg);
+        if (writed * 2  > size_buf)
         {
-            size_buf *= 2;
-            asm_arguments = (elem_t*) realloc(asm_arguments, size_buf);
+            size_buf += countline + sizeof(elem_t);
+            asm_text = (char*) realloc(asm_text, size_buf);
         }
+
         if (0) ;
 
         #include "proc_commands.h"
         else
-            printf("BAD COMMAND %s, skipped it\n", cmd_name);
-        free(cmd_array);
+            printf("BAD COMMAND %s, skipped it line is %d\n", cmd_name, line);
     }
     #undef DEF
-    FILE *cmd_file = fopen(assembler_cmd, "w+b");
-    FILE *arg_file = fopen(assembler_arg, "w+b");
-    if (cmd_file == nullptr || arg_file == nullptr)
+    FILE *asm_file = fopen(assembler, "w+b");
+    if (asm_file == nullptr)
         return 1;
-    fwrite(asm_arguments, sizeof(elem_t), writed_arg, arg_file);
-    fwrite(asm_commands,  sizeof(char), writed_cmd, cmd_file);
 
-    free(asm_commands);
-    free(asm_arguments);
-
-    fclose(arg_file);
-    fclose(cmd_file);
+    fwrite(asm_text, sizeof(char), writed, asm_file);
+    free(asm_text);
+    fclose(asm_file);
 }
 
-int disassembler(const char* assembler_cmd, const char* assembler_arg, const char* disasm_file)
+int disassembler(const char* disasm_file, const char* assembler_file)
 {
     char* result_txt = nullptr;
-    bin_to_txt(assembler_cmd, assembler_arg, result_txt);
+
+    bin_to_txt(assembler_file, result_txt);
 
     FILE *output_file = fopen(disasm_file, "w");
 
@@ -73,81 +71,104 @@ int disassembler(const char* assembler_cmd, const char* assembler_arg, const cha
     free(result_txt);
 }
 
-int split_line(pointer_on_line pointer, char *cmd_name, elem_t *&cmd_array, int *count_number)
+int split_line(pointer_on_line pointer, char *cmd_name, elem_t &arg)
 {
     char* cur_txt = pointer.start;
     int readed = 0;
-    int writed = 0;
-    int num = 0;
-    elem_t temp_var = 0;
-    *count_number = 0;
-    while (sscanf(cur_txt + readed, CONST_FOR_ELEM_T,  &temp_var) == 0 && cur_txt + readed < pointer.end)
+    int tmp1 = 0;
+    char tmp_char[S_LENGTH] = {};
+
+    sscanf(cur_txt, "%s %n", cmd_name, &readed);
+
+    if (sscanf(cur_txt + readed, CONST_FOR_ELEM_T" %n", &arg, &tmp1) == 0)
     {
-        sscanf(cur_txt + readed, "%s%n", cmd_name+writed, &num);
-        readed += num + 1;
-        writed += num;
+        char arg_s[255] = {0};
+        cmd_name[0] = 'S';
+        cmd_name[1] = '_';
+        sscanf(cur_txt, "%s %n", cmd_name + 2, &readed);
+
+        if (sscanf(cur_txt+readed, "%s %n", arg_s, &tmp1) == 0)
+            return NO_ARGS;
+        arg = stoi(arg_s);
     }
-    while (sscanf(cur_txt + readed, CONST_FOR_ELEM_T " %n", cmd_array+*count_number, &num) == 1 &&
-                  cur_txt + readed < pointer.end)
-    {
-        readed += num;
-        (*count_number)++;
-        if ((*count_number)%AVG_COMMAND == 0)
-            cmd_array = (elem_t*) realloc(cmd_array, (*count_number + AVG_COMMAND) * sizeof(elem_t));
-    }
+
+    if (sscanf(cur_txt + readed + tmp1 + 2, "%s", tmp_char) == 1)
+        return EXTRA_ARG;
+    return OK;
+
 }
 
-int bin_to_txt(const char* assembler_cmd, const char* assembler_arg, char* &result_txt)
+int bin_to_txt(const char* assembler_file, char* &result_txt)
 {
-    int size_cmd = 0;
-    int size_arg = 0;
+    int readed = 0;
 
-    char   *asm_commands  = (char*)   readFile (assembler_cmd, &size_cmd, "r+b");
-    elem_t *asm_arguments = (elem_t*) readFile (assembler_arg, &size_arg, "r+b");
-
-    size_arg /= sizeof(elem_t);
-    int cur_str_size = size_cmd + size_arg;
-    result_txt = (char*) calloc(cur_str_size, sizeof(char));
-
+    int size_asm = 0;
+    char *assembler  = (char*) readFile (assembler_file, &size_asm, "r+b");
+    int size_buf = size_asm;
+    result_txt = (char*) calloc(size_buf, sizeof(char));
     int i = 0;
-    int writed_c   = 0;
-    int writed_arg = 0;
-    #define DEF(name, elements, code)                               \
-    else if ((int) asm_commands[i] == name)                         \
-    {                                                               \
-        int cur_read = 0;                                           \
-        sprintf(result_txt + writed_c, "%s %n", #name, &cur_read);  \
-        writed_c += cur_read;                                       \
-        int num_el = elements;                                      \
-        for (;num_el != 0; num_el--)                                \
-        {                                                           \
-            sprintf(result_txt + writed_c, CONST_FOR_ELEM_T " %n",  \
-                    asm_arguments[writed_arg++], &cur_read);        \
-            writed_c += cur_read;                                   \
-        }                                                           \
-        sprintf(result_txt + writed_c, "\n");                       \
-        writed_c += 1;                                              \
+    int writed = 0;
+    #define DEF(name, elements, code)                                   \
+    else if ((int) assembler[readed] == name)                           \
+    {                                                                   \
+        int cur_write = 0;                                              \
+        readed++;                                                       \
+        sprintf(result_txt + writed, "%s%n", #name, &cur_write);        \
+        writed += cur_write;                                            \
+        elem_t* tmp = (elem_t*) (assembler + readed);                   \
+        elem_t next = *tmp;                                             \
+        char cmd_name[S_LENGTH] = #name;                                \
+        int num_el = elements;                                          \
+        if (cmd_name[0] == 'S' && cmd_name[1] == '_')                   \
+        {                                                               \
+            cur_write = 0;                                              \
+            sprintf(result_txt + writed, " %s%n", itos(next), &cur_write);  \
+            readed += sizeof(elem_t);                                   \
+            writed += cur_write;                                        \
+            num_el--;                                                   \
+        }                                                               \
+        for (;num_el != 0; num_el--)                                    \
+        {                                                               \
+            sprintf(result_txt + writed, " "CONST_FOR_ELEM_T"%n",       \
+                    *((elem_t*) (assembler+readed)), &cur_write);       \
+            writed += cur_write;                                        \
+            readed += sizeof(elem_t);                                   \
+        }                                                               \
+        sprintf(result_txt + writed++, "\n");                             \
     }
-    while (i < size_cmd)
+    while (readed < size_asm)
     {
-        if (writed_c*2 > cur_str_size)
+        if (readed*2 > size_buf)
         {
-            cur_str_size*=2;
-            result_txt = (char*) realloc(result_txt, cur_str_size);
+            int temp = size_buf;
+            size_buf += size_asm + 100;
+            result_txt = (char*) realloc(result_txt, size_buf * sizeof(char));
+            memset(result_txt + temp, 0, size_buf - temp);
         }
-
         if (0) ;
 
         #include "proc_commands.h"
 
         else
         {
-            printf("ERROR elem: " CONST_FOR_ELEM_T " iter %d\n", asm_commands[i], i);
+            printf("ERROR elem in asm file: " CONST_FOR_ELEM_T " iter %d\n", *((elem_t*) (assembler+readed)), i);
             return 1;
         }
-        i++;
     }
     #undef DEF
-    free(asm_commands);
-    free(asm_arguments);
+    free(assembler);
+}
+
+int stoi(char* str)
+{
+    #define STR_COMMANDS(str1) if (strcmp(str, #str1) == 0) return str1;
+    #include "string_define.h"
+    #undef STR_COMMANDS
+}
+
+char* itos(int c)
+{
+    #define STR_COMMANDS(str1) if (str1 == c) return #str1;
+    #include "string_define.h"
+    #undef STR_COMMANDS
 }
