@@ -3,7 +3,7 @@
 void test_line_split()
 {
     char* test_string1 = "command1 12";
-    char cmd_name[S_LENGTH] = {0};
+    char* cmd_name = (char*) calloc(S_LENGTH, sizeof(char));
     elem_t arg = 0;
 
     pointer_on_line pointer = {};
@@ -22,10 +22,10 @@ void test_line_split()
     char* test_string2 = "PUSH DX";
     pointer.start = test_string2;
     pointer.end = test_string2 + 7;
-    char cmd_name1[S_LENGTH] = {0};
+    char* cmd_name1 = (char*) calloc(S_LENGTH, sizeof(char));
     split_line(pointer, cmd_name1, arg, label);
 
-    if (strcmp("S_PUSH", cmd_name1) != 0 || arg != stoi(test_string2 + 5))
+    if (strcmp("S_PUSH", cmd_name1) != 0 || arg != my_stoi(test_string2 + 5))
     {
         is_ok = false;
         printf("test failed");

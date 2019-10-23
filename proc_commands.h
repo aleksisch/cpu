@@ -45,10 +45,10 @@ DEF(S_PUSH, 1,
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
         counter_byte += sizeof(elem_t);
         elem_t* ptr_reg = nullptr;
-        if (cmd == 0) ptr_reg = &(processor->reg_a);
-        if (cmd == 1) ptr_reg = &(processor->reg_b);
-        if (cmd == 2) ptr_reg = &(processor->reg_c);
-        if (cmd == 3) ptr_reg = &(processor->reg_d);
+        if (cmd == AX) ptr_reg = &(processor->reg_a);
+        if (cmd == BX) ptr_reg = &(processor->reg_b);
+        if (cmd == CX) ptr_reg = &(processor->reg_c);
+        if (cmd == DX) ptr_reg = &(processor->reg_d);
 
         stack_push(&(processor->cpu_stack), *ptr_reg);
     })
@@ -57,10 +57,10 @@ DEF(S_POP, 1,
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
         counter_byte += sizeof(elem_t);
         elem_t* ptr_reg = nullptr;
-        if (cmd == 0) ptr_reg = &(processor->reg_a);
-        if (cmd == 1) ptr_reg = &(processor->reg_b);
-        if (cmd == 2) ptr_reg = &(processor->reg_c);
-        if (cmd == 3) ptr_reg = &(processor->reg_d);
+        if (cmd == AX) ptr_reg = &(processor->reg_a);
+        if (cmd == BX) ptr_reg = &(processor->reg_b);
+        if (cmd == CX) ptr_reg = &(processor->reg_c);
+        if (cmd == DX) ptr_reg = &(processor->reg_d);
 
         stack_pop(&(processor->cpu_stack), ptr_reg);
     })
@@ -100,5 +100,45 @@ DEF(JA, 1,
     })
 DEF(END, 0, {})
 
+DEF(R_PUSH, 1,
+    {
+        int cmd = (int) *((elem_t*) (asm_text + counter_byte));
+        counter_byte += sizeof(elem_t);
+        stack_push(&(processor->cpu_stack), processor->RAM[cmd]);
+    })                                                             ///RAM PUSH
+DEF(R_POP, 1,
+    {
+        elem_t temp = 0;
+        int cmd = (int) *((elem_t*) (asm_text + counter_byte));
+        counter_byte += sizeof(elem_t);
+        stack_pop(&(processor->cpu_stack), &temp);
+        processor->RAM[cmd] = temp;
+    })
 
+DEF(RS_PUSH, 1,
+    {
+        int cmd = (int) *((elem_t*) (asm_text + counter_byte));
+        counter_byte += sizeof(elem_t);
+        int reg = 0;
+        if (cmd == AX) reg = (processor->reg_a);
+        if (cmd == BX) reg = (processor->reg_b);
+        if (cmd == CX) reg = (processor->reg_c);
+        if (cmd == DX) reg = (processor->reg_d);
+
+        stack_push(&(processor->cpu_stack), (processor->RAM)[reg]);
+    })
+
+DEF(RS_POP, 1,
+    {
+        int cmd = (int) *((elem_t*) (asm_text + counter_byte));
+        counter_byte += sizeof(elem_t);
+        int reg = 0;
+
+        if (cmd == AX) reg = (processor->reg_a);
+        if (cmd == BX) reg = (processor->reg_b);
+        if (cmd == CX) reg = (processor->reg_c);
+        if (cmd == DX) reg = (processor->reg_d);
+
+        stack_pop(&(processor->cpu_stack), processor->RAM + reg);
+    })
 

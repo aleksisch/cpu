@@ -23,7 +23,7 @@ enum commands
 
 enum str_to_i
 {
-    #define STR_COMMANDS(str) str,
+    #define STR_COMMANDS(str, name) str,
 
     #include "string_define.h"
 
@@ -44,6 +44,7 @@ struct cpu_struct
     elem_t reg_b;
     elem_t reg_c;
     elem_t reg_d;
+    elem_t RAM[RAM_LENGTH] = {};             //alloc 1mb array to ram
     cpu_struct(): reg_a(0),
                   reg_b(0),
                   reg_c(0),
@@ -56,7 +57,7 @@ struct cpu_struct
 
 void unit_tests();
 
-int split_line(pointer_on_line pointer, char *cmd_name, elem_t &arg, char* jump_name);
+int split_line(pointer_on_line pointer, char *&cmd_name, elem_t &arg, char* jump_name);
 int make_binary_file                   (const char* input_name = INPUT_FILE,
                                         const char* assembler = ASSEMBLER_FILE);
 int disassembler                       (const char* disasm_file = DISASSEMBLER_FILE,
@@ -65,6 +66,6 @@ int bin_to_txt                         (const char* assembler_file, char* &resul
 
 int CPU (cpu_struct *processor,         const char* result_file = OUTPUT_FILE,
                                         const char* binary_file = ASSEMBLER_FILE);
-int   stoi(char* str);
-char* itos(int c);
+int my_stoi(char* str);
+char* my_itos(int c);
 #endif // MAIN_PROC_H_INCLUDED

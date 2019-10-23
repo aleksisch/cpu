@@ -1,6 +1,7 @@
 #include "main_proc.h"
 #include "onegin.h"
 #include <cstdlib>
+#include <string>
 
 struct labels
 {
@@ -27,11 +28,13 @@ int make_binary_file(const char* input_name, const char* assembler)
 
     for (int line = 0; line < countline; line++)
     {
-        char cmd_name[S_LENGTH] = {0};
+        char* cmd_name = (char*) calloc(S_LENGTH, sizeof(char));
+        char* jump_name = (char*) calloc(S_LENGTH, sizeof(char));
 
         elem_t arg = 0;
-        char jump_name[S_LENGTH] = {};
+
         split_line(lineptr[line], cmd_name, arg, jump_name);
+        printf("%s %d %s\n", cmd_name, arg, jump_name);
         if (writed * 2  > size_buf)
         {
             size_buf += countline + sizeof(elem_t);
@@ -60,7 +63,7 @@ int make_binary_file(const char* input_name, const char* assembler)
         else if (strcmp(cmd_name, #str_name) == 0)                  \
         {                                                           \
             asm_text[writed++] = (char) str_name;                   \
-            for (int read = 0; read < elements; read++)             \
+            if (elements == 1)                                      \
             {                                                       \
                 elem_t* ptr = (elem_t*) (asm_text + writed);        \
                 *ptr = arg;                                         \
@@ -79,7 +82,7 @@ int make_binary_file(const char* input_name, const char* assembler)
             jump_bytes[jump_num].num = writed;                                     \
             strcpy(jump_bytes[jump_num++].name, jump_name);                        \
             writed += sizeof(elem_t);                                              \
-        }
+        }                                                                          // only for label
 
         #include "proc_commands.h"
 
@@ -124,7 +127,7 @@ int disassembler(const char* disasm_file, const char* assembler_file)
     free(result_txt);
 }
 
-int split_line(pointer_on_line pointer, char *cmd_name, elem_t &arg, char* jump_name)
+int split_line(pointer_on_line pointer, char *&cmd_name, elem_t &arg, char* jump_name)
 {
     char* cur_txt = pointer.start;
     int readed = 0;
@@ -136,22 +139,28 @@ int split_line(pointer_on_line pointer, char *cmd_name, elem_t &arg, char* jump_
     if (sscanf(cur_txt + readed, CONST_FOR_ELEM_T" %n", &arg, &tmp1) == 0)
     {
         char arg_s[255] = {0};
-        cmd_name[0] = 'S';
-        cmd_name[1] = '_';
-        sscanf(cur_txt, "%s %n", cmd_name + 2, &readed);
-
+        cmd_name[1] = 'S';
+        cmd_name[2] = '_';
+        sscanf(cur_txt, "%s %n", cmd_name + 3, &readed);
+        cmd_name++;
         if (sscanf(cur_txt + readed, "%s %n", arg_s, &tmp1) == 0)
             return NO_ARGS;
-        if (arg_s[0] == ';')
+        if (arg_s[0] == ';')                            //ignore text after ";"
             cmd_name += 2;
+        else if (arg_s[0] == '[')                       //check is this RAM cmd
+        {
+            if (sscanf(arg_s + 1, "%d", &arg) == 0)
+                cmd_name--;
+            cmd_name[0] = 'R';
+        }
         else
         {
-            arg = stoi(arg_s);
+            arg = my_stoi(arg_s);
             strcpy(jump_name, arg_s);
         }
     }
 
-    if (sscanf(cur_txt + readed + tmp1, "%s", tmp_char) == 1)
+    if (sscanf(cur_txt + readed + tmp1, "%s", tmp_char) == 1 && tmp_char[0] != ';')
         return EXTRA_ARG;
     return OK;
 
@@ -180,10 +189,11 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
         int num_el = elements;                                          \
         if (strcmp("S_JMP", cmd_name) == 0)                            \
             ;                                                           \
-        else if (cmd_name[0] == 'S' && cmd_name[1] == '_')                   \
+        else if (cmd_name[0] == 'S' && cmd_name[1] == '_' ||            \
+                 cmd_name[1] == 'S' && cmd_name[2] == '_')              \
         {                                                               \
             cur_write = 0;                                              \
-            sprintf(result_txt + writed, " %s%n", itos(next), &cur_write);  \
+            sprintf(result_txt + writed, " %s%n", my_itos(next), &cur_write);  \
             readed += sizeof(elem_t);                                   \
             writed += cur_write;                                        \
             num_el--;                                                   \
@@ -220,23 +230,25 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
     free(assembler);
 }
 
-int stoi(char* str)
+int my_stoi(char* str)
 {
-    #define STR_COMMANDS(str1) if (strcmp(str, #str1) == 0) return str1;
+    #define STR_COMMANDS(str1, name_reg) if (strcmp(str, #str1) == 0) return str1;
+
     #include "string_define.h"
+
     #undef STR_COMMANDS
+
+    printf("%s unknow in stoi\n", str);
     return -1;
 }
 
-char* itos(int c)
+char* my_itos(int c)
 {
-    #define STR_COMMANDS(str1) if (str1 == c) return #str1;
+    #define STR_COMMANDS(str1, name_reg) if (str1 == c) return #str1;
 
     #include "string_define.h"
 
     #undef STR_COMMANDS
-
-    printf("WRONG COMMAND NUMBER %d", c);
 
     return 0;
 }
