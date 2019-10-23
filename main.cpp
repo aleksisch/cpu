@@ -1,5 +1,6 @@
 #include "main_proc.h"
 using namespace std;
+#include <windows.h>
 
 int main()
 {

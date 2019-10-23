@@ -28,18 +28,14 @@ int make_binary_file(const char* input_name, const char* assembler)
 
     for (int line = 0; line < countline; line++)
     {
-        char* cmd_name = (char*) calloc(S_LENGTH, sizeof(char));
+        char* cmd_name  = (char*) calloc(S_LENGTH, sizeof(char));
         char* jump_name = (char*) calloc(S_LENGTH, sizeof(char));
 
         elem_t arg = 0;
 
         split_line(lineptr[line], cmd_name, arg, jump_name);
-        printf("%s %d %s\n", cmd_name, arg, jump_name);
-        if (writed * 2  > size_buf)
-        {
-            size_buf += countline + sizeof(elem_t);
-            asm_text = (char*) realloc(asm_text, size_buf);
-        }
+
+        realloc_buffer(&size_buf, &asm_text, writed, countline + sizeof(elem_t));
 
         if (cmd_name[0] == ':')
         {
@@ -209,13 +205,8 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
     }
     while (readed < size_asm)
     {
-        if (writed*2 > size_buf)
-        {
-            int temp = size_buf;
-            size_buf += size_asm + 100;
-            result_txt = (char*) realloc(result_txt, size_buf * sizeof(char));
-            memset(result_txt + temp, 0, size_buf - temp);
-        }
+        realloc_buffer (&size_buf, &result_txt, writed, size_asm + 100);
+
         if (0) ;
 
         #include "proc_commands.h"
@@ -251,4 +242,15 @@ char* my_itos(int c)
     #undef STR_COMMANDS
 
     return 0;
+}
+
+int realloc_buffer(int* size_buf, char** asm_text, int writed, int resize_b)
+{
+    if (writed * 2  > *size_buf)
+        {
+            int temp = *size_buf;
+            *size_buf += resize_b ;
+            *asm_text = (char*) realloc(*asm_text, *size_buf);
+            memset(*asm_txt + temp, 0, *size_buf - temp);
+        }
 }

@@ -1,6 +1,5 @@
 #include "main_proc.h"
 #include "onegin.h"
-
 int CPU(cpu_struct *processor, const char* result_file,
                                const char* binary_file)
 {

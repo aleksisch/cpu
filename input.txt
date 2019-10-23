@@ -1,10 +1,89 @@
-PUSH 50000
+IN
+IN
+IN
+POP CX
+POP BX
 POP AX
-PUSH 100
+
+IN
+POP [9]
+PUSH 11
+OUT
+PUSH [9]
+OUT
+
+
+PUSH 150
+IN
+POP [AX]
+PUSH [AX]
+OUT
+
+JMP discr
+:end_discr    
+
+
+PUSH DX
+PUSH 0
+
+JA null_d     
+
+JMP root_to_ax_bx
+:end_root_to_ax_bx     
+
 PUSH AX
+PUSH BX
+OUT
+OUT
+JMP end
+
+:discr
+PUSH AX
+PUSH CX
+PUSH -4
+MUL
+MUL
+PUSH BX
+PUSH BX
+MUL
 ADD
+POP DX
+JMP end_discr
+
+:null_d
+PUSH 10101010
 OUT
-:label
-PUSH 10
-OUT
-JMP label
+JMP end
+
+:root_to_ax_bx
+PUSH AX
+PUSH 2
+MUL
+PUSH AX
+PUSH 2
+MUL
+
+PUSH BX
+PUSH -1
+MUL
+PUSH DX
+SQRT
+ADD
+DIV
+POP AX
+
+PUSH BX
+PUSH -1
+MUL
+PUSH DX
+SQRT
+PUSH -1
+MUL
+ADD
+DIV
+POP BX
+JMP end_root_to_ax_bx
+
+
+:end
+END
