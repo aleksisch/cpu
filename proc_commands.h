@@ -16,7 +16,7 @@ DEF(ADD, 0,
         stack_pop (&(processor->cpu_stack), &tmp2);
         stack_push(&(processor->cpu_stack), tmp1 + tmp2);
     })
-DEF(MULTIPLY, 0,
+DEF(MUL, 0,
     {
         elem_t tmp1 = 0;
         elem_t tmp2 = 0;
@@ -82,11 +82,23 @@ DEF(SQRT, 0,
         stack_pop(&(processor->cpu_stack), &tmp);
         stack_push(&(processor->cpu_stack), sqrt(tmp));
     })
-DEF(S_JMP, 1,
-    {
-        counter_byte = (int) *((elem_t*) (asm_text + counter_byte));
-    })
 DEF(JMP, 1,
     {
         counter_byte = *((elem_t*) (asm_text + counter_byte));
     })
+DEF(JA, 1,
+    {
+        elem_t first = 0;
+        elem_t second = 0;
+        stack_pop(&(processor->cpu_stack), &first);
+        stack_pop(&(processor->cpu_stack), &second);
+
+        if (first - second > 0)
+            counter_byte = *((elem_t*) (asm_text + counter_byte));
+        else
+            counter_byte += sizeof(elem_t);
+    })
+DEF(END, 0, {})
+
+
+

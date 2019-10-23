@@ -6,7 +6,7 @@ static const char* OUTPUT_FILE       = "output.txt";
 static const char* DISASSEMBLER_FILE = "disassembler.txt";
 static const int S_LENGTH            = 255;                //maximum string length
 static const int AVG_COMMAND         = 3;                  //average argument in command
-static const int LABELS_LENGTH       = 8;                  //max labels
+static const int LABELS_LENGTH       = 80;                  //max labels
 
 #define CONST_FOR_ELEM_T "%lf"
 typedef double elem_t;                                  //set default stack type

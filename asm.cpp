@@ -25,17 +25,6 @@ int make_binary_file(const char* input_name, const char* assembler)
     int jump_num = 0;
     int num_labels = 0;
 
-    #define DEF(name, elements, code)                           \
-    else if (strcmp(cmd_name, #name) == 0)                      \
-    {                                                           \
-        asm_text[writed++] = (char) name;                       \
-        for (int read = 0; read < elements; read++)             \
-        {                                                       \
-            elem_t* ptr = (elem_t*) (asm_text + writed);        \
-            *ptr = arg;                                         \
-            writed += sizeof(elem_t);                           \
-        }                                                       \
-    }
     for (int line = 0; line < countline; line++)
     {
         char cmd_name[S_LENGTH] = {0};
@@ -66,25 +55,48 @@ int make_binary_file(const char* input_name, const char* assembler)
                 strcpy(labels_arr[num_labels].name, cmd_name+1);
             }
         }
-        else if (strcmp(cmd_name, "S_JMP") == 0)
-        {
-            asm_text[writed++] = (char) S_JMP;
-            jump_bytes[jump_num].num = writed;
-            strcpy(jump_bytes[jump_num++].name, jump_name);
-            writed += sizeof(elem_t);
+
+        #define DEF(str_name, elements, code)                       \
+        else if (strcmp(cmd_name, #str_name) == 0)                  \
+        {                                                           \
+            asm_text[writed++] = (char) str_name;                   \
+            for (int read = 0; read < elements; read++)             \
+            {                                                       \
+                elem_t* ptr = (elem_t*) (asm_text + writed);        \
+                *ptr = arg;                                         \
+                writed += sizeof(elem_t);                           \
+            }                                                       \
         }
+
         #include "proc_commands.h"
+
+        #undef DEF
+
+        #define DEF(str_name, elements, code)                                      \
+        else if (strcmp(cmd_name, "S_" #str_name) == 0)                            \
+        {                                                                          \
+            asm_text[writed++] = (char) str_name;                                  \
+            jump_bytes[jump_num].num = writed;                                     \
+            strcpy(jump_bytes[jump_num++].name, jump_name);                        \
+            writed += sizeof(elem_t);                                              \
+        }
+
+        #include "proc_commands.h"
+
+        #undef DEF
+
         else
             printf("BAD COMMAND %s, skipped it line is %d\n", cmd_name, line);
     }
-    #undef DEF
 
     for (int i = 0; i < jump_num; i++)
-    {
+
         for (int l = 0; l < LABELS_LENGTH; l++)
+
             if (strcmp(jump_bytes[i].name, labels_arr[l].name) == 0)
+
                 *((elem_t*) (asm_text + jump_bytes[i].num)) = (elem_t) labels_arr[l].num;
-    }
+
     FILE *asm_file = fopen(assembler, "w+b");
     if (asm_file == nullptr)
         return 1;
@@ -128,13 +140,18 @@ int split_line(pointer_on_line pointer, char *cmd_name, elem_t &arg, char* jump_
         cmd_name[1] = '_';
         sscanf(cur_txt, "%s %n", cmd_name + 2, &readed);
 
-        if (sscanf(cur_txt+readed, "%s %n", arg_s, &tmp1) == 0)
+        if (sscanf(cur_txt + readed, "%s %n", arg_s, &tmp1) == 0)
             return NO_ARGS;
-        arg = stoi(arg_s);
-        strcpy(jump_name, arg_s);
+        if (arg_s[0] == ';')
+            cmd_name += 2;
+        else
+        {
+            arg = stoi(arg_s);
+            strcpy(jump_name, arg_s);
+        }
     }
 
-    if (sscanf(cur_txt + readed + tmp1 + 2, "%s", tmp_char) == 1)
+    if (sscanf(cur_txt + readed + tmp1, "%s", tmp_char) == 1)
         return EXTRA_ARG;
     return OK;
 
@@ -182,7 +199,7 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
     }
     while (readed < size_asm)
     {
-        if (readed*2 > size_buf)
+        if (writed*2 > size_buf)
         {
             int temp = size_buf;
             size_buf += size_asm + 100;
@@ -214,6 +231,12 @@ int stoi(char* str)
 char* itos(int c)
 {
     #define STR_COMMANDS(str1) if (str1 == c) return #str1;
+
     #include "string_define.h"
+
     #undef STR_COMMANDS
+
+    printf("WRONG COMMAND NUMBER %d", c);
+
+    return 0;
 }
