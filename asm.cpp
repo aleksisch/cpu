@@ -78,7 +78,7 @@ int make_binary_file(const char* input_name, const char* assembler)
             jump_bytes[jump_num].num = writed;                                     \
             strcpy(jump_bytes[jump_num++].name, jump_name);                        \
             writed += sizeof(elem_t);                                              \
-        }                                                                          // only for label
+        }                                                                          // for label
 
         #include "proc_commands.h"
 
@@ -183,10 +183,10 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
         elem_t next = *tmp;                                             \
         char cmd_name[S_LENGTH] = #name;                                \
         int num_el = elements;                                          \
-        if (strcmp("S_JMP", cmd_name) == 0)                            \
+        if (strcmp("S_JMP", cmd_name) == 0)                             \
             ;                                                           \
-        else if (cmd_name[0] == 'S' && cmd_name[1] == '_' ||            \
-                 cmd_name[1] == 'S' && cmd_name[2] == '_')              \
+        else if ((cmd_name[0] == 'S' && cmd_name[1] == '_') ||          \
+                 (cmd_name[1] == 'S' && cmd_name[2] == '_'))            \
         {                                                               \
             cur_write = 0;                                              \
             sprintf(result_txt + writed, " %s%n", my_itos(next), &cur_write);  \
@@ -229,7 +229,6 @@ int my_stoi(char* str)
 
     #undef STR_COMMANDS
 
-    printf("%s unknow in stoi\n", str);
     return -1;
 }
 
@@ -251,6 +250,9 @@ int realloc_buffer(int* size_buf, char** asm_text, int writed, int resize_b)
             int temp = *size_buf;
             *size_buf += resize_b ;
             *asm_text = (char*) realloc(*asm_text, *size_buf);
-            memset(*asm_txt + temp, 0, *size_buf - temp);
+            if (asm_text == nullptr)
+                return REALLOC_ERROR;
+            memset(*asm_text + temp, 0, *size_buf - temp);
         }
+    return OK;
 }

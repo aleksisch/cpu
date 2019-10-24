@@ -49,7 +49,6 @@ DEF(S_PUSH, 1,
         if (cmd == BX) ptr_reg = &(processor->reg_b);
         if (cmd == CX) ptr_reg = &(processor->reg_c);
         if (cmd == DX) ptr_reg = &(processor->reg_d);
-
         stack_push(&(processor->cpu_stack), *ptr_reg);
     })
 DEF(S_POP, 1,
@@ -61,7 +60,6 @@ DEF(S_POP, 1,
         if (cmd == BX) ptr_reg = &(processor->reg_b);
         if (cmd == CX) ptr_reg = &(processor->reg_c);
         if (cmd == DX) ptr_reg = &(processor->reg_d);
-
         stack_pop(&(processor->cpu_stack), ptr_reg);
     })
 DEF(IN, 0,
@@ -112,7 +110,7 @@ DEF(R_POP, 1,
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
         counter_byte += sizeof(elem_t);
         stack_pop(&(processor->cpu_stack), &temp);
-        processor->RAM[cmd] = temp;
+        processor->RAM[cmd%RAM_LENGTH] = temp;
     })
 
 DEF(RS_PUSH, 1,
@@ -125,7 +123,7 @@ DEF(RS_PUSH, 1,
         if (cmd == CX) reg = (processor->reg_c);
         if (cmd == DX) reg = (processor->reg_d);
 
-        stack_push(&(processor->cpu_stack), (processor->RAM)[reg]);
+        stack_push(&(processor->cpu_stack), (processor->RAM)[reg%RAM_LENGTH]);
     })
 
 DEF(RS_POP, 1,
@@ -138,7 +136,17 @@ DEF(RS_POP, 1,
         if (cmd == BX) reg = (processor->reg_b);
         if (cmd == CX) reg = (processor->reg_c);
         if (cmd == DX) reg = (processor->reg_d);
-
-        stack_pop(&(processor->cpu_stack), processor->RAM + reg);
+        stack_pop(&(processor->cpu_stack), processor->RAM + (reg % RAM_LENGTH));      //% to avoid
+    })
+DEF(CALL, 1,
+    {
+        stack_push(&(processor->func_stack), (elem_t) counter_byte);
+        counter_byte = *((elem_t*) (asm_text + counter_byte));
+    })
+DEF(RET, 0,
+    {
+        elem_t stk = 0;
+        stack_pop(&(processor->func_stack), &stk);
+        counter_byte = ((int) stk) + sizeof(elem_t);
     })
 

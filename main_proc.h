@@ -40,6 +40,7 @@ enum errors
 struct cpu_struct
 {
     stack_t cpu_stack;
+    stack_t func_stack;
     elem_t reg_a;
     elem_t reg_b;
     elem_t reg_c;
@@ -51,6 +52,7 @@ struct cpu_struct
                   reg_d(0)
         {
             STACK_CONSTRUCT(&cpu_stack);
+            STACK_CONSTRUCT(&func_stack);
         }
 };
 
@@ -67,5 +69,9 @@ int bin_to_txt                         (const char* assembler_file, char* &resul
 int CPU (cpu_struct *processor,         const char* result_file = OUTPUT_FILE,
                                         const char* binary_file = ASSEMBLER_FILE);
 int my_stoi(char* str);
+
 char* my_itos(int c);
+
+int realloc_buffer(int* size_buf, char** asm_text, int writed, int resize_b);
+
 #endif // MAIN_PROC_H_INCLUDED

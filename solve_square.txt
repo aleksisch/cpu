@@ -5,8 +5,7 @@ POP CX
 POP BX
 POP AX
 
-JMP discr
-:end_discr    
+CALL discr   
 
 
 PUSH DX
@@ -14,8 +13,7 @@ PUSH 0
 
 JA null_d     
 
-JMP root_to_ax_bx
-:end_root_to_ax_bx     
+CALL root_to_ax_bx
 
 PUSH AX
 PUSH BX
@@ -34,12 +32,12 @@ PUSH BX
 MUL
 ADD
 POP DX
-JMP end_discr
+RET
 
 :null_d
 PUSH 10101010
 OUT
-JMP end
+RET
 
 :root_to_ax_bx
 PUSH AX
@@ -68,8 +66,7 @@ MUL
 ADD
 DIV
 POP BX
-JMP end_root_to_ax_bx
-
+RET
 
 :end
 END

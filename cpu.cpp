@@ -14,12 +14,14 @@ int CPU(cpu_struct *processor, const char* result_file,
         counter_byte++;                          \
         code                                     \
     }
+    int line = 0;
     while (counter_byte < size_bin)
     {
+        line++;
         if (0);
 
         #include "proc_commands.h"
-        else printf("ERROR in command number %d\n", asm_text[counter_byte++]);
+        else printf("ERROR in command number %d %d\n", asm_text[counter_byte++], line);
     }
     #undef DEF
     elem_t result = 0;
