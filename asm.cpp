@@ -9,11 +9,16 @@ struct labels
     char name[S_LENGTH];
 };
 
+
+
 int make_binary_file(const char* input_name, const char* assembler)
 {
     int size = 0, countline = 0;
+
     pointer_on_line* lineptr = nullptr;
+
     char* text = nullptr;
+
     work_file(&size, &lineptr, &text, input_name, &countline);
 
     int size_buf   = countline + (int) sizeof(elem_t);
@@ -22,8 +27,11 @@ int make_binary_file(const char* input_name, const char* assembler)
 
     int writed = 0;
 
-    labels labels_arr[LABELS_LENGTH] = {};
+    int error = OK;
+
+    labels labels_arr[LABELS_LENGTH] = {};          ///add struct
     labels jump_bytes[LABELS_LENGTH] = {};
+
     int jump_num = 0;
     int num_labels = 0;
 
@@ -54,6 +62,7 @@ int make_binary_file(const char* input_name, const char* assembler)
                 labels_arr[num_labels].num = writed;
                 strcpy(labels_arr[num_labels].name, cmd_name+1);
             }
+            else error |= OVERFLOW_LABELS;
         }
 
         #define DEF(str_name, elements, code)                       \
@@ -79,7 +88,7 @@ int make_binary_file(const char* input_name, const char* assembler)
             jump_bytes[jump_num].num = writed;                                     \
             strcpy(jump_bytes[jump_num++].name, jump_name);                        \
             writed += (int) sizeof(elem_t);                                        \
-        }                                                                          // for label
+        }
 
         #include "proc_commands.h"
 
@@ -105,7 +114,7 @@ int make_binary_file(const char* input_name, const char* assembler)
     free(asm_text);
     fclose(asm_file);
 
-    return 0;
+    return error;
 }
 
 int disassembler(const char* disasm_file, const char* assembler_file)
@@ -137,17 +146,24 @@ int split_line(pointer_on_line pointer, char *&cmd_name, elem_t &arg, char* jump
 
     sscanf(cur_txt, "%s %n", cmd_name, &readed);
 
-    if (sscanf(cur_txt + readed, CONST_FOR_ELEM_T" %n", &arg, &tmp1) == 0)
+    if (sscanf(cur_txt + readed, CONST_FOR_ELEM_T" %n", &arg, &tmp1) == 0) //if EOF sscanf return -1 => skip if
     {
-        char arg_s[255] = {0};
+        char arg_s[S_LENGTH] = {0};
+
         cmd_name[1] = 'S';
         cmd_name[2] = '_';
+
         sscanf(cur_txt, "%s %n", cmd_name + 3, &readed);
         cmd_name++;
+
         if (sscanf(cur_txt + readed, "%s %n", arg_s, &tmp1) == 0)
             return NO_ARGS;
+
         if (arg_s[0] == ';')                            //ignore text after ";"
-            cmd_name += 2;
+        {
+            cmd_name += 2;                              //skip S_
+            memset(arg_s, 0, S_LENGTH);
+        }
         else if (arg_s[0] == '[')                       //check is this RAM cmd
         {
             if (sscanf(arg_s + 1, "%d", &arg) == 0)
@@ -166,6 +182,7 @@ int split_line(pointer_on_line pointer, char *&cmd_name, elem_t &arg, char* jump
     return OK;
 
 }
+
 
 int bin_to_txt(const char* assembler_file, char* &result_txt)
 {

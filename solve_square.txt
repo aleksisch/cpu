@@ -37,7 +37,7 @@ RET
 :null_d
 PUSH 10101010
 OUT
-RET
+JMP end
 
 :root_to_ax_bx
 PUSH AX

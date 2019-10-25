@@ -34,7 +34,8 @@ enum errors
     OK = 0,
     BAD_INPUT_DATA,
     EXTRA_ARG,
-    NO_ARGS
+    NO_ARGS,
+    OVERFLOW_LABELS,
 };
 
 struct cpu_struct
