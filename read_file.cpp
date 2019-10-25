@@ -36,7 +36,7 @@ Read input file to text
 \param[out] size size of file
 \return text
 */
-char *readFile (const char* str, int *size, char* chmod)
+char *readFile (const char* str, int *size, const char* chmod)
 {
     assert (size);
     assert (str);

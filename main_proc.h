@@ -70,7 +70,7 @@ int CPU (cpu_struct *processor,         const char* result_file = OUTPUT_FILE,
                                         const char* binary_file = ASSEMBLER_FILE);
 int my_stoi(char* str);
 
-char* my_itos(int c);
+const char* my_itos(int c);
 
 int realloc_buffer(int* size_buf, char** asm_text, int writed, int resize_b);
 

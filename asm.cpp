@@ -8,6 +8,7 @@ struct labels
     int num;
     char name[S_LENGTH];
 };
+
 int make_binary_file(const char* input_name, const char* assembler)
 {
     int size = 0, countline = 0;
@@ -15,7 +16,7 @@ int make_binary_file(const char* input_name, const char* assembler)
     char* text = nullptr;
     work_file(&size, &lineptr, &text, input_name, &countline);
 
-    int size_buf   = countline + sizeof(elem_t);
+    int size_buf   = countline + (int) sizeof(elem_t);
 
     char* asm_text = (char*) calloc(size_buf, sizeof(char));
 
@@ -35,7 +36,7 @@ int make_binary_file(const char* input_name, const char* assembler)
 
         split_line(lineptr[line], cmd_name, arg, jump_name);
 
-        realloc_buffer(&size_buf, &asm_text, writed, countline + sizeof(elem_t));
+        realloc_buffer(&size_buf, &asm_text, writed, countline + (int) sizeof(elem_t));
 
         if (cmd_name[0] == ':')
         {
@@ -63,7 +64,7 @@ int make_binary_file(const char* input_name, const char* assembler)
             {                                                       \
                 elem_t* ptr = (elem_t*) (asm_text + writed);        \
                 *ptr = arg;                                         \
-                writed += sizeof(elem_t);                           \
+                writed += (int) sizeof(elem_t);                     \
             }                                                       \
         }
 
@@ -77,7 +78,7 @@ int make_binary_file(const char* input_name, const char* assembler)
             asm_text[writed++] = (char) str_name;                                  \
             jump_bytes[jump_num].num = writed;                                     \
             strcpy(jump_bytes[jump_num++].name, jump_name);                        \
-            writed += sizeof(elem_t);                                              \
+            writed += (int) sizeof(elem_t);                                        \
         }                                                                          // for label
 
         #include "proc_commands.h"
@@ -103,6 +104,8 @@ int make_binary_file(const char* input_name, const char* assembler)
     fwrite(asm_text, sizeof(char), writed, asm_file);
     free(asm_text);
     fclose(asm_file);
+
+    return 0;
 }
 
 int disassembler(const char* disasm_file, const char* assembler_file)
@@ -121,6 +124,8 @@ int disassembler(const char* disasm_file, const char* assembler_file)
     fclose(output_file);
 
     free(result_txt);
+
+    return 0;
 }
 
 int split_line(pointer_on_line pointer, char *&cmd_name, elem_t &arg, char* jump_name)
@@ -189,19 +194,19 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
                  (cmd_name[1] == 'S' && cmd_name[2] == '_'))            \
         {                                                               \
             cur_write = 0;                                              \
-            sprintf(result_txt + writed, " %s%n", my_itos(next), &cur_write);  \
-            readed += sizeof(elem_t);                                   \
+            sprintf(result_txt + writed, " %s%n", my_itos((int) next), &cur_write);  \
+            readed += (int) sizeof(elem_t);                             \
             writed += cur_write;                                        \
             num_el--;                                                   \
         }                                                               \
         for (;num_el != 0; num_el--)                                    \
         {                                                               \
-            sprintf(result_txt + writed, " "CONST_FOR_ELEM_T"%n",       \
+            sprintf(result_txt + writed, " " CONST_FOR_ELEM_T "%n",     \
                     *((elem_t*) (assembler+readed)), &cur_write);       \
             writed += cur_write;                                        \
-            readed += sizeof(elem_t);                                   \
+            readed += (int) sizeof(elem_t);                             \
         }                                                               \
-        sprintf(result_txt + writed++, "\n");                             \
+        sprintf(result_txt + writed++, "\n");                           \
     }
     while (readed < size_asm)
     {
@@ -219,6 +224,8 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
     }
     #undef DEF
     free(assembler);
+
+    return 0;
 }
 
 int my_stoi(char* str)
@@ -232,7 +239,7 @@ int my_stoi(char* str)
     return -1;
 }
 
-char* my_itos(int c)
+const char* my_itos(int c)
 {
     #define STR_COMMANDS(str1, name_reg) if (str1 == c) return #str1;
 

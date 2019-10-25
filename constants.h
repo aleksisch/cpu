@@ -13,8 +13,8 @@ static const int RAM_LENGTH          = 100000;              //RAM size
 typedef double elem_t;                                  //set default stack type
 
 
-const int STD_LENGTH_STACK     = 20;                     //default stack length
-const int POISON_BYTE          = 127;                    //poison for memset
-const int POISON_STACK         = 2354686532;             //canary in stack
+static const int STD_LENGTH_STACK     = 20;                     //default stack length
+static const int POISON_BYTE          = 127;                    //poison for memset
+static const int POISON_STACK         = 23546862;             //canary in stack
 
 #endif // CONSTANTS_H_INCLUDED

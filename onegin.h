@@ -11,7 +11,7 @@ static const int MAX_SIZE = 256;
 void work_file(int *size, struct pointer_on_line** lineptr, char** text,
                const char* input, int* countline);
 
-char *readFile (const char* str, int *size, char* chmod = "r");
+char *readFile (const char* str, int *size, const char* chmod = "r");
 
 int get_line (char* text, int size);
 
