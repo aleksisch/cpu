@@ -3,108 +3,54 @@
 #include <cstdlib>
 #include <string>
 
-struct labels
-{
-    int num;
-    char name[S_LENGTH];
-};
-
-
 
 int make_binary_file(const char* input_name, const char* assembler)
 {
-    int size = 0, countline = 0;
-
     pointer_on_line* lineptr = nullptr;
-
-    char* text = nullptr;
+    char*               text = nullptr;
+    int                 size = 0;
+    int            countline = 0;
+    int               writed = 0;
+    int                error = OK;
 
     work_file(&size, &lineptr, &text, input_name, &countline);
 
-    int size_buf   = countline + (int) sizeof(elem_t);
+    int size_buf = countline + (int) sizeof(elem_t);
 
     char* asm_text = (char*) calloc(size_buf, sizeof(char));
 
-    int writed = 0;
-
-    int error = OK;
-
-    labels labels_arr[LABELS_LENGTH] = {};          ///add struct
-    labels jump_bytes[LABELS_LENGTH] = {};
-
-    int jump_num = 0;
-    int num_labels = 0;
+    Data_labels data_lable;
 
     for (int line = 0; line < countline; line++)
     {
-        char* cmd_name  = (char*) calloc(S_LENGTH, sizeof(char));
-        char* jump_name = (char*) calloc(S_LENGTH, sizeof(char));
+        Commands cur_cmd = {};
 
-        elem_t arg = 0;
-
-        split_line(lineptr[line], cmd_name, arg, jump_name);
+        error = split_line(lineptr[line], &cur_cmd);
 
         realloc_buffer(&size_buf, &asm_text, writed, countline + (int) sizeof(elem_t));
+        if (get_lable (&data_lable, &cur_cmd, &writed, &error, asm_text) == 0);
 
-        if (cmd_name[0] == ':')
-        {
-            bool flag = true;
-            for (int i = 0; i < LABELS_LENGTH; i++)
-            {
-                if (strcmp(cmd_name+1, labels_arr[i].name) == 0)
-                {
-                    labels_arr[i].num = writed;
-                    flag = false;
-                }
-            }
-            if (flag && ++num_labels < 8)
-            {
-                labels_arr[num_labels].num = writed;
-                strcpy(labels_arr[num_labels].name, cmd_name+1);
-            }
-            else error |= OVERFLOW_LABELS;
-        }
-
-        #define DEF(str_name, elements, code)                       \
-        else if (strcmp(cmd_name, #str_name) == 0)                  \
-        {                                                           \
-            asm_text[writed++] = (char) str_name;                   \
-            if (elements == 1)                                      \
-            {                                                       \
-                elem_t* ptr = (elem_t*) (asm_text + writed);        \
-                *ptr = arg;                                         \
-                writed += (int) sizeof(elem_t);                     \
-            }                                                       \
+        #define DEF(num, elements, code)                                                        \
+        else if (cur_cmd.cmd_num == num && cur_cmd.type_arg == elements)                        \
+        {                                                                                       \
+            asm_text[writed++] = (char) num;                                                    \
+            asm_text[writed++] = (char) elements;                                               \
+            if ( (elements & NO_ARG) != NO_ARG)                                                      \
+            {                                                                                   \
+                elem_t* ptr = (elem_t*) (asm_text + writed);                                    \
+                *ptr = cur_cmd.arg_num;                                                         \
+                writed += (int) sizeof(elem_t);                                                 \
+            }                                                                                   \
         }
 
         #include "proc_commands.h"
 
         #undef DEF
-
-        #define DEF(str_name, elements, code)                                      \
-        else if (strcmp(cmd_name, "S_" #str_name) == 0)                            \
-        {                                                                          \
-            asm_text[writed++] = (char) str_name;                                  \
-            jump_bytes[jump_num].num = writed;                                     \
-            strcpy(jump_bytes[jump_num++].name, jump_name);                        \
-            writed += (int) sizeof(elem_t);                                        \
-        }
-
-        #include "proc_commands.h"
-
-        #undef DEF
-
         else
-            printf("BAD COMMAND %s, skipped it line is %d\n", cmd_name, line);
+            printf("BAD COMMAND %d name, %d type skipped it line is %d\n", cur_cmd.cmd_num, cur_cmd.type_arg, line);
     }
 
-    for (int i = 0; i < jump_num; i++)
-
-        for (int l = 0; l < LABELS_LENGTH; l++)
-
-            if (strcmp(jump_bytes[i].name, labels_arr[l].name) == 0)
-
-                *((elem_t*) (asm_text + jump_bytes[i].num)) = (elem_t) labels_arr[l].num;
+    update_label(data_lable, asm_text);
 
     FILE *asm_file = fopen(assembler, "w+b");
     if (asm_file == nullptr)
@@ -115,6 +61,64 @@ int make_binary_file(const char* input_name, const char* assembler)
     fclose(asm_file);
 
     return error;
+}
+
+int update_label(Data_labels data_lable, char* asm_text)
+{
+    for (int i = 0; i < data_lable.jump_num; i++)
+
+        for (int l = 0; l < LABELS_LENGTH; l++)
+        {
+            if (strcmp(data_lable.jump_bytes[i].name, data_lable.labels_arr[l].name) == 0)
+
+                *((elem_t*) (asm_text + data_lable.jump_bytes[i].byte)) = (elem_t) data_lable.labels_arr[l].byte;
+        }
+    return 0;
+}
+
+int get_lable(Data_labels* data_label, Commands* cur_cmd, int* writed, int *error, char* asm_text)
+{
+    if (cur_cmd->label_name[0] == ':' && (cur_cmd->type_arg == LABEL))
+    {
+        bool label_exist = false;
+
+        for (int i = 0; i < LABELS_LENGTH; i++)
+
+            if (strcmp(cur_cmd->label_name, data_label->labels_arr[i].name) == 0)
+            {
+                data_label->labels_arr[i].byte = *writed;
+                label_exist = true;
+            }
+
+        int* l_number = &(data_label->labels_num);
+
+        if (label_exist == 0 && ++(*l_number) < LABELS_LENGTH)
+        {
+                   data_label -> labels_arr[*l_number].byte = *writed;
+            strcpy(data_label -> labels_arr[*l_number].name, cur_cmd->label_name+1);    //+1 to avoid ':'
+        }
+
+        if (LABELS_LENGTH > *l_number) *error |= OVERFLOW_LABELS;
+    }
+    else if (cur_cmd->type_arg == LABEL)
+    {
+        #define DEF(num, elements, code)                                                                \
+        if (cur_cmd->cmd_num == num && elements == cur_cmd->type_arg)                                   \
+        {                                                                                               \
+            asm_text[(*writed)++] = (char) num;                                                         \
+            asm_text[(*writed)++] = (char) elements;                                                    \
+                   data_label -> jump_bytes[ data_label -> jump_num ].byte = *writed;                   \
+            strcpy(data_label -> jump_bytes[(data_label -> jump_num) ++].name, cur_cmd->label_name);    \
+            *writed += (int) sizeof(elem_t);                                                            \
+        }                                                                          // for label
+
+        #include "proc_commands.h"
+
+        #undef DEF
+    }
+    else return 1;
+
+    return 0;
 }
 
 int disassembler(const char* disasm_file, const char* assembler_file)
@@ -128,7 +132,7 @@ int disassembler(const char* disasm_file, const char* assembler_file)
     if (output_file == nullptr)
         return 1;
 
-    fprintf(output_file, result_txt);
+    fprintf(output_file, "%s", result_txt);
 
     fclose(output_file);
 
@@ -137,93 +141,132 @@ int disassembler(const char* disasm_file, const char* assembler_file)
     return 0;
 }
 
-int split_line(pointer_on_line pointer, char *&cmd_name, elem_t &arg, char* jump_name)
+int get_type_str_arg(char* arg_name, Commands* cmd)
+{
+    if (arg_name[0] == ';')         //if comment
+    {
+        cmd->type_arg |= NO_ARG;
+        return 0;
+    }
+    if (arg_name[0] == '[')         //if ram
+    {
+        cmd->type_arg |= RAM;
+        if (sscanf(arg_name + 1, CONST_FOR_ELEM_T, &(cmd->arg_num)) == 1)   //scanf array index
+            return 0;
+
+        else
+            arg_name++;             //to skip '['
+    }
+    #define STR_COMMANDS(name, letter) if ((#name)[0] == arg_name[0] && \
+                                           (#name)[1] == arg_name[1])   \
+                                           {                            \
+                                               cmd->arg_num = name;     \
+                                               cmd->type_arg |= REG;    \
+                                           }
+    #include "string_define.h"
+
+    #undef STR_COMMANDS
+
+    if ((cmd->type_arg & REG) == REG)
+        return 0;
+
+    cmd->type_arg |= LABEL;           //if else it mean we work with label
+    strcpy(cmd->label_name, arg_name);
+
+    return 0;
+}
+
+int split_line(pointer_on_line pointer, Commands* cmd)
 {
     char* cur_txt = pointer.start;
     int readed = 0;
     int tmp1 = 0;
-    char tmp_char[S_LENGTH] = {};
 
-    sscanf(cur_txt, "%s %n", cmd_name, &readed);
+    char arg_str[S_LENGTH] = {};
+    char cmd_str[S_LENGTH] = {};
 
-    if (sscanf(cur_txt + readed, CONST_FOR_ELEM_T" %n", &arg, &tmp1) == 0) //if EOF sscanf return -1 => skip if
+    int error = 0;
+    sscanf(cur_txt, "%s %n", cmd_str, &readed);
+
+    if (cmd_str[0] == ':')
     {
-        char arg_s[S_LENGTH] = {0};
-
-        cmd_name[1] = 'S';
-        cmd_name[2] = '_';
-
-        sscanf(cur_txt, "%s %n", cmd_name + 3, &readed);
-        cmd_name++;
-
-        if (sscanf(cur_txt + readed, "%s %n", arg_s, &tmp1) == 0)
-            return NO_ARGS;
-
-        if (arg_s[0] == ';')                            //ignore text after ";"
-        {
-            cmd_name += 2;                              //skip S_
-            memset(arg_s, 0, S_LENGTH);
-        }
-        else if (arg_s[0] == '[')                       //check is this RAM cmd
-        {
-            if (sscanf(arg_s + 1, "%d", &arg) == 0)
-                cmd_name--;
-            cmd_name[0] = 'R';
-        }
-        else
-        {
-            arg = my_stoi(arg_s);
-            strcpy(jump_name, arg_s);
-        }
+        strcpy(cmd->label_name, cmd_str);
+        cmd->type_arg |= LABEL;
     }
 
-    if (sscanf(cur_txt + readed + tmp1, "%s", tmp_char) == 1 && tmp_char[0] != ';')
-        return EXTRA_ARG;
-    return OK;
 
+    #define DEF(name, num, code) else if (strcmp(#name, cmd_str) == 0) cmd->cmd_num = name;
+
+    #include "proc_commands.h"
+
+    #undef DEF
+
+    else
+    {
+        error |= UNKNOWN_CMD;
+        printf("Unknown command\n");
+    }
+
+    int last_elem = sscanf(cur_txt + readed, CONST_FOR_ELEM_T " %n", &cmd->arg_num, &tmp1);
+
+    if (last_elem == -1)                                //end of file
+    {
+        if (cmd->type_arg != LABEL)
+            cmd->type_arg |= NO_ARG;
+    }
+    else if (last_elem == 0)
+    {
+        sscanf(cur_txt + readed, "%s %n", arg_str, &tmp1);
+
+        get_type_str_arg(arg_str, cmd);                        //getting cmd->type_arg && cmd->arg_num
+    }
+
+    else if (last_elem == 1) cmd->type_arg |= ELEM_T;
+
+    if (sscanf(cur_txt + readed + tmp1, "%s", arg_str) == 1 && arg_str[0] != ';')
+        error |= EXTRA_ARG;
+
+    return error;
 }
 
 
 int bin_to_txt(const char* assembler_file, char* &result_txt)
 {
-    int readed = 0;
+    int readed    = 0;
+    int size_asm  = 0;
+    int writed    = 0;
 
-    int size_asm = 0;
     char *assembler  = (char*) readFile (assembler_file, &size_asm, "r+b");
-    int size_buf = size_asm;
+
+    int size_buf = size_asm + 100;                                         //to not often use realloc on small asm file
+
     result_txt = (char*) calloc(size_buf, sizeof(char));
-    int i = 0;
-    int writed = 0;
-    #define DEF(name, elements, code)                                   \
-    else if ((int) assembler[readed] == name)                           \
-    {                                                                   \
-        int cur_write = 0;                                              \
-        readed++;                                                       \
-        sprintf(result_txt + writed, "%s%n", #name, &cur_write);        \
-        writed += cur_write;                                            \
-        elem_t* tmp = (elem_t*) (assembler + readed);                   \
-        elem_t next = *tmp;                                             \
-        char cmd_name[S_LENGTH] = #name;                                \
-        int num_el = elements;                                          \
-        if (strcmp("S_JMP", cmd_name) == 0)                             \
-            ;                                                           \
-        else if ((cmd_name[0] == 'S' && cmd_name[1] == '_') ||          \
-                 (cmd_name[1] == 'S' && cmd_name[2] == '_'))            \
-        {                                                               \
-            cur_write = 0;                                              \
-            sprintf(result_txt + writed, " %s%n", my_itos((int) next), &cur_write);  \
-            readed += (int) sizeof(elem_t);                             \
-            writed += cur_write;                                        \
-            num_el--;                                                   \
-        }                                                               \
-        for (;num_el != 0; num_el--)                                    \
-        {                                                               \
-            sprintf(result_txt + writed, " " CONST_FOR_ELEM_T "%n",     \
-                    *((elem_t*) (assembler+readed)), &cur_write);       \
-            writed += cur_write;                                        \
-            readed += (int) sizeof(elem_t);                             \
-        }                                                               \
-        sprintf(result_txt + writed++, "\n");                           \
+
+    #define DEF(name, elements, code)                                                       \
+    else if ((int) assembler[readed] == name &&                                             \
+             (int) assembler[readed + 1] == elements)                                       \
+    {                                                                                       \
+        readed += 2;                                                                        \
+        int cur_write = 0;                                                                  \
+        sprintf(result_txt + writed, "%s%n", #name, &cur_write);                            \
+        writed += cur_write;                                                                \
+        elem_t next = *((elem_t*) (assembler + readed));                                    \
+        if ((((int)elements & NO_ARG)) == 0)                                                       \
+        {                                                                                   \
+            if ( elements == (RAM | REG))                                        \
+                sprintf(result_txt + writed, " [%s]%n", get_reg_name((int) next), &cur_write);\
+            else if (elements == REG)                                                       \
+                sprintf(result_txt + writed, " %s%n", get_reg_name((int) next), &cur_write);\
+                                                                                            \
+            else if (elements == RAM)                                                       \
+                sprintf(result_txt + writed, " [" "%d" "]" "%n", (int) next, &cur_write);   \
+                                                                                            \
+            else sprintf(result_txt + writed, " " CONST_FOR_ELEM_T "%n", next, &cur_write); \
+                                                                                            \
+            writed += cur_write;                                                            \
+            readed += (int) sizeof(elem_t);                                                 \
+        }                                                                                   \
+        sprintf(result_txt + writed++, "\n");                                               \
     }
     while (readed < size_asm)
     {
@@ -235,7 +278,7 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
 
         else
         {
-            printf("ERROR elem in asm file: " CONST_FOR_ELEM_T " iter %d\n", *((elem_t*) (assembler+readed)), i);
+            printf("ERROR elem in asm file: %d %d \n",  assembler[readed], readed);
             return 1;
         }
     }
@@ -245,27 +288,6 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
     return 0;
 }
 
-int my_stoi(char* str)
-{
-    #define STR_COMMANDS(str1, name_reg) if (strcmp(str, #str1) == 0) return str1;
-
-    #include "string_define.h"
-
-    #undef STR_COMMANDS
-
-    return -1;
-}
-
-const char* my_itos(int c)
-{
-    #define STR_COMMANDS(str1, name_reg) if (str1 == c) return #str1;
-
-    #include "string_define.h"
-
-    #undef STR_COMMANDS
-
-    return 0;
-}
 
 int realloc_buffer(int* size_buf, char** asm_text, int writed, int resize_b)
 {
@@ -279,4 +301,15 @@ int realloc_buffer(int* size_buf, char** asm_text, int writed, int resize_b)
             memset(*asm_text + temp, 0, *size_buf - temp);
         }
     return OK;
+}
+
+const char* get_reg_name(int n)
+{
+    #define STR_COMMANDS(name, letter) if (name == n) return #name;
+
+    #include "string_define.h"
+
+    #undef STR_COMMANDS
+
+    return "Unknown register";
 }

@@ -17,11 +17,12 @@ int CPU(cpu_struct *processor, const char* result_file,
     char *asm_text  = (char*) readFile (binary_file, &size_bin, "r+b");
 
     int counter_byte = 0;
-    #define DEF(name, elements, code)            \
-    else if (name == asm_text[counter_byte])     \
-    {                                            \
-        counter_byte++;                          \
-        code                                     \
+    #define DEF(name, elements, code)                   \
+    else if (name == asm_text[counter_byte] &&          \
+             elements == (int) asm_text[counter_byte + 1])  \
+    {                                                   \
+        counter_byte += 2;                              \
+        code                                            \
     }
     int line = 0;
     while (counter_byte < size_bin)
@@ -30,7 +31,11 @@ int CPU(cpu_struct *processor, const char* result_file,
         if (0);
 
         #include "proc_commands.h"
-        else printf("ERROR in command number %d %d\n", asm_text[counter_byte++], line);
+        else
+        {
+            printf("ERROR in command number %d %d\n", asm_text[counter_byte], line);
+            counter_byte += 2;
+        }
     }
     #undef DEF
 

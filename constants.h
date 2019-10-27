@@ -1,6 +1,6 @@
 #ifndef CONSTANTS_H_INCLUDED
 #define CONSTANTS_H_INCLUDED
-static const char* INPUT_FILE        = "solve_square.txt";
+static const char* INPUT_FILE        = "input.txt";
 static const char* ASSEMBLER_FILE    = "assembler.bin";
 static const char* OUTPUT_FILE       = "output.txt";
 static const char* DISASSEMBLER_FILE = "disassembler.txt";

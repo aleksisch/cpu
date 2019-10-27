@@ -4,23 +4,16 @@ IN
 POP CX
 POP BX
 POP AX
-
 CALL discr   
-
-
 PUSH DX
 PUSH 0
-
 JA null_d     
-
 CALL root_to_ax_bx
-
 PUSH AX
 PUSH BX
 OUT
 OUT
 JMP end
-
 :discr
 PUSH AX
 PUSH CX
@@ -33,12 +26,10 @@ MUL
 ADD
 POP DX
 RET
-
 :null_d
 PUSH 10101010
 OUT
 JMP end
-
 :root_to_ax_bx
 PUSH AX
 PUSH 2
@@ -46,7 +37,6 @@ MUL
 PUSH AX
 PUSH 2
 MUL
-
 PUSH BX
 PUSH -1
 MUL
@@ -55,7 +45,6 @@ SQRT
 ADD
 DIV
 POP AX
-
 PUSH BX
 PUSH -1
 MUL
@@ -67,6 +56,5 @@ ADD
 DIV
 POP BX
 RET
-
 :end
 END
