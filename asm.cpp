@@ -21,34 +21,41 @@ int make_binary_file(const char* input_name, const char* assembler)
 
     Data_labels data_lable;
 
+    #define DEF(num, elements, code)                                                        \
+    else if (cur_cmd.cmd_num == num && cur_cmd.type_arg == elements)                        \
+    {                                                                                       \
+        asm_text[writed++] = (char) num;                                                    \
+        asm_text[writed++] = (char) elements;                                               \
+        if ( (elements & NO_ARG) != NO_ARG)                                                 \
+        {                                                                                   \
+            elem_t* ptr = (elem_t*) (asm_text + writed);                                    \
+            *ptr        = cur_cmd.arg_num;                                                         \
+            writed     += (int) sizeof(elem_t);                                                 \
+        }                                                                                   \
+    }
+
     for (int line = 0; line < countline; line++)
     {
         Commands cur_cmd = {};
 
         error = split_line(lineptr[line], &cur_cmd);
 
+        if (error != 0)
+            printf("something go wrohg error code: %d", error);
+
         realloc_buffer(&size_buf, &asm_text, writed, countline + (int) sizeof(elem_t));
+
         if (get_lable (&data_lable, &cur_cmd, &writed, &error, asm_text) == 0);
 
-        #define DEF(num, elements, code)                                                        \
-        else if (cur_cmd.cmd_num == num && cur_cmd.type_arg == elements)                        \
-        {                                                                                       \
-            asm_text[writed++] = (char) num;                                                    \
-            asm_text[writed++] = (char) elements;                                               \
-            if ( (elements & NO_ARG) != NO_ARG)                                                      \
-            {                                                                                   \
-                elem_t* ptr = (elem_t*) (asm_text + writed);                                    \
-                *ptr = cur_cmd.arg_num;                                                         \
-                writed += (int) sizeof(elem_t);                                                 \
-            }                                                                                   \
-        }
+        else if ((cur_cmd.type_arg & COMMENT) == COMMENT);
 
         #include "proc_commands.h"
 
-        #undef DEF
         else
             printf("BAD COMMAND %d name, %d type skipped it line is %d\n", cur_cmd.cmd_num, cur_cmd.type_arg, line);
     }
+
+    #undef DEF
 
     update_label(data_lable, asm_text);
 
@@ -108,7 +115,7 @@ int get_lable(Data_labels* data_label, Commands* cur_cmd, int* writed, int *erro
             asm_text[(*writed)++] = (char) num;                                                         \
             asm_text[(*writed)++] = (char) elements;                                                    \
                    data_label -> jump_bytes[ data_label -> jump_num ].byte = *writed;                   \
-            strcpy(data_label -> jump_bytes[(data_label -> jump_num) ++].name, cur_cmd->label_name);    \
+            strcpy(data_label -> jump_bytes[(data_label -> jump_num)++].name, cur_cmd->label_name);    \
             *writed += (int) sizeof(elem_t);                                                            \
         }                                                                          // for label
 
@@ -170,7 +177,7 @@ int get_type_str_arg(char* arg_name, Commands* cmd)
     if ((cmd->type_arg & REG) == REG)
         return 0;
 
-    cmd->type_arg |= LABEL;           //if else it mean we work with label
+    cmd->type_arg |= LABEL;
     strcpy(cmd->label_name, arg_name);
 
     return 0;
@@ -179,13 +186,13 @@ int get_type_str_arg(char* arg_name, Commands* cmd)
 int split_line(pointer_on_line pointer, Commands* cmd)
 {
     char* cur_txt = pointer.start;
-    int readed = 0;
-    int tmp1 = 0;
+    int readed    = 0;
+    int tmp1      = 0;
+    int error = 0;
 
     char arg_str[S_LENGTH] = {};
     char cmd_str[S_LENGTH] = {};
 
-    int error = 0;
     sscanf(cur_txt, "%s %n", cmd_str, &readed);
 
     if (cmd_str[0] == ':')
@@ -193,6 +200,8 @@ int split_line(pointer_on_line pointer, Commands* cmd)
         strcpy(cmd->label_name, cmd_str);
         cmd->type_arg |= LABEL;
     }
+
+    else if (cmd_str[0] == ';') cmd->type_arg |= COMMENT;
 
 
     #define DEF(name, num, code) else if (strcmp(#name, cmd_str) == 0) cmd->cmd_num = name;
@@ -218,7 +227,7 @@ int split_line(pointer_on_line pointer, Commands* cmd)
     {
         sscanf(cur_txt + readed, "%s %n", arg_str, &tmp1);
 
-        get_type_str_arg(arg_str, cmd);                        //getting cmd->type_arg && cmd->arg_num
+        error |= get_type_str_arg(arg_str, cmd);                        //getting cmd->type_arg && cmd->arg_num
     }
 
     else if (last_elem == 1) cmd->type_arg |= ELEM_T;
@@ -243,7 +252,7 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
     result_txt = (char*) calloc(size_buf, sizeof(char));
 
     #define DEF(name, elements, code)                                                       \
-    else if ((int) assembler[readed] == name &&                                             \
+    else if ((int) assembler[readed]     == name &&                                         \
              (int) assembler[readed + 1] == elements)                                       \
     {                                                                                       \
         readed += 2;                                                                        \
@@ -251,15 +260,15 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
         sprintf(result_txt + writed, "%s%n", #name, &cur_write);                            \
         writed += cur_write;                                                                \
         elem_t next = *((elem_t*) (assembler + readed));                                    \
-        if ((((int)elements & NO_ARG)) == 0)                                                       \
+        if ((((int)elements & NO_ARG)) == 0)                                                \
         {                                                                                   \
-            if ( elements == (RAM | REG))                                        \
+            if ( elements == (RAM | REG))                                                   \
                 sprintf(result_txt + writed, " [%s]%n", get_reg_name((int) next), &cur_write);\
             else if (elements == REG)                                                       \
                 sprintf(result_txt + writed, " %s%n", get_reg_name((int) next), &cur_write);\
                                                                                             \
             else if (elements == RAM)                                                       \
-                sprintf(result_txt + writed, " [" "%d" "]" "%n", (int) next, &cur_write);   \
+                sprintf(result_txt + writed, " [%d]%n", (int) next, &cur_write);   \
                                                                                             \
             else sprintf(result_txt + writed, " " CONST_FOR_ELEM_T "%n", next, &cur_write); \
                                                                                             \
@@ -270,7 +279,7 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
     }
     while (readed < size_asm)
     {
-        realloc_buffer (&size_buf, &result_txt, writed, size_asm + 100);
+        realloc_buffer (&size_buf, &result_txt, writed, size_asm + 100); //to avoid overflow array on small size_asm
 
         if (0) ;
 
@@ -279,10 +288,12 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
         else
         {
             printf("ERROR elem in asm file: %d %d \n",  assembler[readed], readed);
+            free(assembler);
             return 1;
         }
     }
     #undef DEF
+
     free(assembler);
 
     return 0;
@@ -294,10 +305,13 @@ int realloc_buffer(int* size_buf, char** asm_text, int writed, int resize_b)
     if (writed * 2  > *size_buf)
         {
             int temp = *size_buf;
+
             *size_buf += resize_b ;
             *asm_text = (char*) realloc(*asm_text, *size_buf);
+
             if (asm_text == nullptr)
                 return REALLOC_ERROR;
+
             memset(*asm_text + temp, 0, *size_buf - temp);
         }
     return OK;

@@ -1,41 +1,41 @@
 #define VAR_POP(tmp) elem_t tmp = 0; stack_pop (&(processor->cpu_stack), &tmp);
 #define PUSH_STACK(tmp)    stack_push(&(processor->cpu_stack), (tmp));
 
-DEF(PUSH, Type_arg::ELEM_T,
+DEF(PUSH, ELEM_T,
    {
         PUSH_STACK(*((elem_t*) (asm_text + counter_byte)));
 
         counter_byte += sizeof(elem_t);
    })
-DEF(ADD, Type_arg::NO_ARG,
+DEF(ADD, NO_ARG,
     {
         VAR_POP(tmp1);
         VAR_POP(tmp2);
 
         PUSH_STACK(tmp1 + tmp2);
     })
-DEF(MUL, Type_arg::NO_ARG,
+DEF(MUL, NO_ARG,
     {
         VAR_POP(tmp1);
         VAR_POP(tmp2);
 
         PUSH_STACK(tmp1 * tmp2);
     })
-DEF(SUB, Type_arg::NO_ARG,
+DEF(SUB, NO_ARG,
     {
         VAR_POP(tmp1);
         VAR_POP(tmp2);
 
         PUSH_STACK(tmp1 - tmp2);
     })
-DEF(DIV, Type_arg::NO_ARG,
+DEF(DIV, NO_ARG,
     {
         VAR_POP(tmp1);
         VAR_POP(tmp2);
 
         PUSH_STACK(tmp1 / tmp2);
     })
-DEF(PUSH, Type_arg::REG,
+DEF(PUSH, REG,
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
@@ -45,7 +45,7 @@ DEF(PUSH, Type_arg::REG,
 
         PUSH_STACK(*ptr_reg);
     })
-DEF(POP, Type_arg::REG,
+DEF(POP, REG,
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
@@ -55,7 +55,7 @@ DEF(POP, Type_arg::REG,
 
         stack_pop(&(processor->cpu_stack), ptr_reg);
     })
-DEF(IN, Type_arg::NO_ARG,
+DEF(IN, NO_ARG,
     {
         elem_t tmp = 0;
 
@@ -63,45 +63,58 @@ DEF(IN, Type_arg::NO_ARG,
 
         PUSH_STACK(tmp);
     })
-DEF(OUT, Type_arg::NO_ARG,
+DEF(OUT, NO_ARG,
     {
         VAR_POP(tmp);
 
         printf(CONST_FOR_ELEM_T"\n", tmp);
     })
-DEF(SQRT, Type_arg::NO_ARG,
+DEF(SQRT, NO_ARG,
     {
         VAR_POP(tmp);
 
         PUSH_STACK(sqrt(tmp));
     })
-DEF(JMP, Type_arg::LABEL,
+DEF(JMP, LABEL,
     {
-        counter_byte = *((elem_t*) (asm_text + counter_byte));
+        counter_byte = (int) *((elem_t*) (asm_text + counter_byte));
     })
-DEF(JA, Type_arg::LABEL,
+DEF(JA, LABEL,
     {
         VAR_POP(first);
 
         VAR_POP(second);
 
         if (first - second > 0)
-            counter_byte = *((elem_t*) (asm_text + counter_byte));
+            counter_byte = (int) *((elem_t*) (asm_text + counter_byte));
+
         else
             counter_byte += sizeof(elem_t);
     })
-DEF(END, Type_arg::NO_ARG, {})
+DEF(JAE, LABEL,
+    {
+        VAR_POP(first);
 
-DEF(PUSH, Type_arg::RAM,
+        VAR_POP(second);
+
+        if (first == second)
+            counter_byte = (int) *((elem_t*) (asm_text + counter_byte));
+
+        else
+            counter_byte += sizeof(elem_t);
+    })
+DEF(END, NO_ARG, {})
+
+DEF(PUSH, RAM,
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
         counter_byte += sizeof(elem_t);
 
-        PUSH_STACK(processor->RAM[cmd]);
+        PUSH_STACK(processor->RAM[cmd % RAM_LENGTH]);
     })
 
-DEF(POP, Type_arg::RAM,
+DEF(POP, RAM,
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
@@ -114,7 +127,7 @@ DEF(POP, Type_arg::RAM,
         processor->RAM[cmd % RAM_LENGTH] = temp;
     })
 
-DEF(PUSH, (Type_arg::RAM | Type_arg::REG),
+DEF(PUSH, (RAM | REG),
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
@@ -122,12 +135,12 @@ DEF(PUSH, (Type_arg::RAM | Type_arg::REG),
 
         int reg = (int) *(get_reg_num(cmd, processor));
 
-        if (reg > RAM_LENGTH) printf("OWERFLOW IN RAM");
+        if (reg > RAM_LENGTH || reg < 0) printf("OWERFLOW IN RAM || BAD REG");
 
-        stack_push(&(processor->cpu_stack), (processor->RAM)[reg%RAM_LENGTH]);
+        else stack_push(&(processor->cpu_stack), (processor->RAM)[reg % RAM_LENGTH]);
     })
 
-DEF(POP, (Type_arg::RAM | Type_arg::REG),
+DEF(POP, (RAM | REG),
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
@@ -135,17 +148,17 @@ DEF(POP, (Type_arg::RAM | Type_arg::REG),
 
         int reg = (int) *(get_reg_num(cmd, processor));
 
-        if (reg > RAM_LENGTH) printf("OWERFLOW IN RAM\n");
+        if (reg > RAM_LENGTH || reg < 0) printf("OWERFLOW IN RAM\n");
 
-        stack_pop(&(processor->cpu_stack), processor->RAM + (reg));      //% to avoid
+        else stack_pop(&(processor->cpu_stack), processor->RAM + (reg % RAM_LENGTH));
     })
-DEF(CALL, Type_arg::LABEL,
+DEF(CALL, LABEL,
     {
         stack_push(&(processor->func_stack), (elem_t) counter_byte);
 
-        counter_byte = *((elem_t*) (asm_text + counter_byte));
+        counter_byte = (int) *((elem_t*) (asm_text + counter_byte));
     })
-DEF(RET, Type_arg::NO_ARG,
+DEF(RET, NO_ARG,
     {
         elem_t stk = 0;
 
@@ -153,4 +166,7 @@ DEF(RET, Type_arg::NO_ARG,
 
         counter_byte = ((int) stk) + sizeof(elem_t);
     })
-
+DEF(DUMP, NO_ARG,
+    {
+        stack_dump(&(processor->cpu_stack));
+    })

@@ -261,14 +261,18 @@ int stack_ok(stack_t* this_)
 {
 
     int error = 0;
+    bool not_null = true;
 
     if (this_ == nullptr || this_->data == nullptr)
+    {
         error |= NULL_STACK;
+        not_null = false;
+    }
 
-    if (this_->stk_size-1 <= this_->counter)
+    if (this_->stk_size-1 <= this_->counter && not_null)
         error |= OVERFLOW_;
 
-    if (this_->counter < 1)
+    if (this_->counter < 1 && not_null)
         error |= UNDERFLOW_;
 
     #ifdef NDEBUG
@@ -277,16 +281,16 @@ int stack_ok(stack_t* this_)
 
     #else
 
-    if (this_->data != this_->pointer)
+    if (this_->data != this_->pointer && not_null)
         error |= BAD_POINTER;
 
-    if ( !chek_stack_canary(this_) )
+    if ( !chek_stack_canary(this_)  && not_null)
         error |= CANARY_ERROR;
 
-    if (this_->hash_struct != get_hash_struct(this_))
+    if (this_->hash_struct != get_hash_struct(this_) && not_null)
         error |= HASH_STRUCT_ERROR;
 
-    if (this_->hash_array  != get_hash_array(this_))
+    if (this_->hash_array  != get_hash_array(this_) && not_null)
         error |= HASH_ERROR;
 
     if (error) stack_perror (this_, error);
@@ -347,6 +351,9 @@ void stack_perror(stack_t* this_, int error)
 
 void stack_dump (stack_t* this_)
 {
+    #ifndef CONST_FOR_ELEM_T
+    #define CONST_FOR_ELEM_T int
+    #endif // CONST_FOR_ELEM_T
     if (this_ == nullptr)
     {
         printf("DUMP FAILED. Pointer is nullptr\n");
@@ -359,7 +366,8 @@ void stack_dump (stack_t* this_)
     printf("    Canary in struct, start: %d, end: %d\n",   this_->canary_start, this_->canary_end);
     printf("    Stack canary should be   %d \n",           POISON_STACK);
     if (this_->stk_size)
-    printf("    Canary in array, start:  %d, end:  %d\n",  this_->data[0], this_->data[this_->stk_size-1]);
+    printf("    Canary in array, start:  " CONST_FOR_ELEM_T
+           ", end:  " CONST_FOR_ELEM_T "\n",  this_->data[0], this_->data[this_->stk_size-1]);
     printf("    Array hash chould be is  %lld\n",          this_->hash_array);
     printf("    Array hash is            %lld\n",          get_hash_array(this_));
     printf("    Struct hash should be    %lld\n",          this_->hash_struct);
@@ -368,7 +376,7 @@ void stack_dump (stack_t* this_)
     printf("    Data address             %p \n",           this_->data);
     printf("    Stack elements:\n");
     for (int i = 1; i < this_->stk_size - 1; i++)
-        printf("        [%02d] "CONST_FOR_ELEM_T"\n", i, this_->data[i]);
+        printf("        [%02d] " CONST_FOR_ELEM_T "\n", i, this_->data[i]);
 
     printf("}----------------------------------------------------------------------------\n\n\n\n");
 }

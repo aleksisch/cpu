@@ -1,0 +1,45 @@
+IN
+
+CALL fibo
+OUT
+JMP end
+
+:fibo
+DUMP
+POP AX
+
+
+PUSH 2
+PUSH AX
+JAE label
+:endlabel
+
+PUSH 2
+PUSH AX
+
+JA fib
+:endfib
+
+DUMP
+ADD
+RET
+
+:fib
+
+PUSH AX
+PUSH -1
+ADD
+
+CALL fibo
+JMP endfib
+
+:label
+PUSH 1
+PUSH 1
+JMP endlabel
+
+:is1
+PUSH 1
+OUT
+
+:end

@@ -9,11 +9,11 @@ void test_line_split()
     Commands cur_cmd1 = {};
     if (split_line(test, &cur_cmd1) != 0) printf("error != 0\n");
 
-    if (cur_cmd1.cmd_num != PUSH) printf("err in cmd number push\n");
+    if ( ((int) cur_cmd1.cmd_num) != PUSH) printf("err in cmd number push\n");
 
-    if (cur_cmd1.arg_num != 12) printf("err in arg push\n");
+    if ( ((int) cur_cmd1.arg_num) != 12) printf("err in arg push\n");
 
-    if (cur_cmd1.type_arg != ELEM_T) printf("err in type_arg push\n");
+    if ( ((int) cur_cmd1.type_arg) != ELEM_T) printf("err in type_arg push\n");
 
     printf( "test 2\n");
     char* t_push2 = "PUSH AX";
@@ -44,7 +44,7 @@ void test_line_split()
     if (cur_cmd3.arg_num != 12)
         printf("err in arg push ram\n");
 
-    if (cur_cmd3.type_arg != (RAM | ELEM_T))
+    if (cur_cmd3.type_arg != RAM)
         printf("err in type_arg push ram %d %d\n", RAM | ELEM_T, cur_cmd3.type_arg);
 
     printf( "test 4\n");
@@ -64,7 +64,7 @@ void test_line_split()
         printf("111err in type_arg push ram reg %d %d\n", RAM | REG, cur_cmd4.type_arg);
 
     printf( "test 5\n");
-    char* test_label1 = ":huiii";
+    char* test_label1 = ":label";
     test.start = test_label1;
     Commands cur_cmd5 = {};
     if (split_line(test, &cur_cmd5) != 0)
@@ -76,10 +76,10 @@ void test_line_split()
     if (cur_cmd5.arg_num != 0)
         printf("err in arg label\n");
 
-    if (cur_cmd5.type_arg != (LABEL|NO_ARG))
+    if (cur_cmd5.type_arg != LABEL)
         printf("err in type_arg push label %d %d\n", LABEL, cur_cmd5.type_arg);
 
-    if (strcmp(cur_cmd5.label_name, ":huiii"))
+    if (strcmp(cur_cmd5.label_name, ":label"))
         printf("bad label name %s\n", cur_cmd5.label_name);
 
     printf( "test 6\n");
@@ -113,15 +113,7 @@ void test_line_split()
     if (strcmp(cur_cmd7.label_name, "something")) printf("bad label name %s\n", cur_cmd7.label_name);
 
 
-    printf("----------------------------------------------------------------------------\n");
-
-}
-
-void test_disassembler()
-{
-    make_binary_file("test_disasm.txt");
-    disassembler("out_disasm.txt");
-
+    printf("End of test line split\n----------------------------------------------------------------------------\n");
 
 }
 

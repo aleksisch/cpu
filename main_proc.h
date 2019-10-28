@@ -43,6 +43,7 @@ enum Type_arg
     NO_ARG      = 1 << 2,
     RAM         = 1 << 3,
     ELEM_T      = 1 << 4,
+    COMMENT     = 1 << 5,
 };
 
 struct cpu_struct
@@ -109,5 +110,7 @@ int CPU (cpu_struct *processor,         const char* result_file = OUTPUT_FILE,
 int realloc_buffer(int* size_buf, char** asm_text, int writed, int resize_b);
 
 const char* get_reg_name(int n);
+
+elem_t* get_reg_num(int cmd, cpu_struct* processor);
 
 #endif // MAIN_PROC_H_INCLUDED

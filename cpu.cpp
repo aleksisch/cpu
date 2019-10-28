@@ -7,6 +7,8 @@ elem_t* get_reg_num(int cmd, cpu_struct* processor)
     if (cmd == BX) return &(processor->reg_b);
     if (cmd == CX) return &(processor->reg_c);
     if (cmd == DX) return &(processor->reg_d);
+
+    return nullptr;
 }
 
 int CPU(cpu_struct *processor, const char* result_file,
@@ -51,4 +53,6 @@ int CPU(cpu_struct *processor, const char* result_file,
         fprintf(output_file, CONST_FOR_ELEM_T, result);
     }
     fclose(output_file);
+
+    return 0;
 }
