@@ -1,5 +1,4 @@
 #include "main_proc.h"
-#include "onegin.h"
 #include <cstdlib>
 #include <string>
 
@@ -26,11 +25,12 @@ int make_binary_file(const char* input_name, const char* assembler)
     {                                                                                       \
         asm_text[writed++] = (char) num;                                                    \
         asm_text[writed++] = (char) elements;                                               \
+                                                                                            \
         if ( (elements & NO_ARG) != NO_ARG)                                                 \
         {                                                                                   \
             elem_t* ptr = (elem_t*) (asm_text + writed);                                    \
-            *ptr        = cur_cmd.arg_num;                                                         \
-            writed     += (int) sizeof(elem_t);                                                 \
+            *ptr        = cur_cmd.arg_num;                                                  \
+            writed     += (int) sizeof(elem_t);                                             \
         }                                                                                   \
     }
 
@@ -39,9 +39,6 @@ int make_binary_file(const char* input_name, const char* assembler)
         Commands cur_cmd = {};
 
         error = split_line(lineptr[line], &cur_cmd);
-
-        if (error != 0)
-            printf("something go wrohg error code: %d", error);
 
         realloc_buffer(&size_buf, &asm_text, writed, countline + (int) sizeof(elem_t));
 
@@ -53,6 +50,10 @@ int make_binary_file(const char* input_name, const char* assembler)
 
         else
             printf("BAD COMMAND %d name, %d type skipped it line is %d\n", cur_cmd.cmd_num, cur_cmd.type_arg, line);
+
+        if (error != 0)
+            printf("something goes wrong error code: %d", error);
+
     }
 
     #undef DEF
@@ -60,6 +61,7 @@ int make_binary_file(const char* input_name, const char* assembler)
     update_label(data_lable, asm_text);
 
     FILE *asm_file = fopen(assembler, "w+b");
+
     if (asm_file == nullptr)
         return 1;
 
@@ -114,8 +116,9 @@ int get_lable(Data_labels* data_label, Commands* cur_cmd, int* writed, int *erro
         {                                                                                               \
             asm_text[(*writed)++] = (char) num;                                                         \
             asm_text[(*writed)++] = (char) elements;                                                    \
+                                                                                                        \
                    data_label -> jump_bytes[ data_label -> jump_num ].byte = *writed;                   \
-            strcpy(data_label -> jump_bytes[(data_label -> jump_num)++].name, cur_cmd->label_name);    \
+            strcpy(data_label -> jump_bytes[(data_label -> jump_num)++].name, cur_cmd->label_name);     \
             *writed += (int) sizeof(elem_t);                                                            \
         }                                                                          // for label
 
@@ -158,6 +161,7 @@ int get_type_str_arg(char* arg_name, Commands* cmd)
     if (arg_name[0] == '[')         //if ram
     {
         cmd->type_arg |= RAM;
+
         if (sscanf(arg_name + 1, CONST_FOR_ELEM_T, &(cmd->arg_num)) == 1)   //scanf array index
             return 0;
 
@@ -178,6 +182,7 @@ int get_type_str_arg(char* arg_name, Commands* cmd)
         return 0;
 
     cmd->type_arg |= LABEL;
+
     strcpy(cmd->label_name, arg_name);
 
     return 0;
@@ -188,7 +193,7 @@ int split_line(pointer_on_line pointer, Commands* cmd)
     char* cur_txt = pointer.start;
     int readed    = 0;
     int tmp1      = 0;
-    int error = 0;
+    int error     = 0;
 
     char arg_str[S_LENGTH] = {};
     char cmd_str[S_LENGTH] = {};
@@ -210,11 +215,7 @@ int split_line(pointer_on_line pointer, Commands* cmd)
 
     #undef DEF
 
-    else
-    {
-        error |= UNKNOWN_CMD;
-        printf("Unknown command\n");
-    }
+    else error |= UNKNOWN_CMD;
 
     int last_elem = sscanf(cur_txt + readed, CONST_FOR_ELEM_T " %n", &cmd->arg_num, &tmp1);
 
@@ -260,15 +261,17 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
         sprintf(result_txt + writed, "%s%n", #name, &cur_write);                            \
         writed += cur_write;                                                                \
         elem_t next = *((elem_t*) (assembler + readed));                                    \
-        if ((((int)elements & NO_ARG)) == 0)                                                \
+                                                                                            \
+        if (((int)elements & NO_ARG) == 0)                                                  \
         {                                                                                   \
             if ( elements == (RAM | REG))                                                   \
                 sprintf(result_txt + writed, " [%s]%n", get_reg_name((int) next), &cur_write);\
+                                                                                            \
             else if (elements == REG)                                                       \
                 sprintf(result_txt + writed, " %s%n", get_reg_name((int) next), &cur_write);\
                                                                                             \
             else if (elements == RAM)                                                       \
-                sprintf(result_txt + writed, " [%d]%n", (int) next, &cur_write);   \
+                sprintf(result_txt + writed, " [%d]%n", (int) next, &cur_write);            \
                                                                                             \
             else sprintf(result_txt + writed, " " CONST_FOR_ELEM_T "%n", next, &cur_write); \
                                                                                             \
@@ -279,7 +282,7 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
     }
     while (readed < size_asm)
     {
-        realloc_buffer (&size_buf, &result_txt, writed, size_asm + 100); //to avoid overflow array on small size_asm
+        realloc_buffer (&size_buf, &result_txt, writed, size_asm + 100); // + 100 to avoid overflow array on small size_asm
 
         if (0) ;
 
@@ -288,15 +291,14 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
         else
         {
             printf("ERROR elem in asm file: %d %d \n",  assembler[readed], readed);
-            free(assembler);
-            return 1;
+            error |= UNKNOWN_CMD;
         }
     }
     #undef DEF
 
     free(assembler);
 
-    return 0;
+    return OK;
 }
 
 
@@ -305,7 +307,6 @@ int realloc_buffer(int* size_buf, char** asm_text, int writed, int resize_b)
     if (writed * 2  > *size_buf)
         {
             int temp = *size_buf;
-
             *size_buf += resize_b ;
             *asm_text = (char*) realloc(*asm_text, *size_buf);
 

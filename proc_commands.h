@@ -5,7 +5,7 @@ DEF(PUSH, ELEM_T,
    {
         PUSH_STACK(*((elem_t*) (asm_text + counter_byte)));
 
-        counter_byte += sizeof(elem_t);
+        counter_byte += size_elem_t;
    })
 DEF(ADD, NO_ARG,
     {
@@ -39,7 +39,7 @@ DEF(PUSH, REG,
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
-        counter_byte += sizeof(elem_t);
+        counter_byte += size_elem_t;
 
         elem_t* ptr_reg = get_reg_num(cmd, processor);
 
@@ -49,7 +49,7 @@ DEF(POP, REG,
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
-        counter_byte += sizeof(elem_t);
+        counter_byte += size_elem_t;
 
         elem_t* ptr_reg = get_reg_num(cmd, processor);
 
@@ -67,7 +67,7 @@ DEF(OUT, NO_ARG,
     {
         VAR_POP(tmp);
 
-        printf(CONST_FOR_ELEM_T"\n", tmp);
+        printf(CONST_FOR_ELEM_T "\n", tmp);
     })
 DEF(SQRT, NO_ARG,
     {
@@ -89,7 +89,7 @@ DEF(JA, LABEL,
             counter_byte = (int) *((elem_t*) (asm_text + counter_byte));
 
         else
-            counter_byte += sizeof(elem_t);
+            counter_byte += size_elem_t;
     })
 DEF(JAE, LABEL,
     {
@@ -97,19 +97,22 @@ DEF(JAE, LABEL,
 
         VAR_POP(second);
 
-        if (first == second)
+        if (fabs(first - second) <= (elem_t) EPSILON)
             counter_byte = (int) *((elem_t*) (asm_text + counter_byte));
 
         else
-            counter_byte += sizeof(elem_t);
+            counter_byte += size_elem_t;
     })
-DEF(END, NO_ARG, {})
+DEF(END, NO_ARG,
+    {
+        counter_byte = size_bin;
+    })     //to end running program
 
 DEF(PUSH, RAM,
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
-        counter_byte += sizeof(elem_t);
+        counter_byte += size_elem_t;
 
         PUSH_STACK(processor->RAM[cmd % RAM_LENGTH]);
     })
@@ -118,7 +121,7 @@ DEF(POP, RAM,
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
-        counter_byte += sizeof(elem_t);
+        counter_byte += size_elem_t;
 
         VAR_POP(temp);
 
@@ -131,7 +134,7 @@ DEF(PUSH, (RAM | REG),
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
-        counter_byte += sizeof(elem_t);
+        counter_byte += size_elem_t;
 
         int reg = (int) *(get_reg_num(cmd, processor));
 
@@ -144,7 +147,7 @@ DEF(POP, (RAM | REG),
     {
         int cmd = (int) *((elem_t*) (asm_text + counter_byte));
 
-        counter_byte += sizeof(elem_t);
+        counter_byte += size_elem_t;
 
         int reg = (int) *(get_reg_num(cmd, processor));
 
@@ -164,9 +167,12 @@ DEF(RET, NO_ARG,
 
         stack_pop(&(processor->func_stack), &stk);
 
-        counter_byte = ((int) stk) + sizeof(elem_t);
+        counter_byte = (int) stk + size_elem_t;
     })
 DEF(DUMP, NO_ARG,
     {
         stack_dump(&(processor->cpu_stack));
     })
+
+#undef VAR_POP
+#undef PUSH_STACK

@@ -4,13 +4,9 @@
 #include <iostream>
 #include <cmath>
 
+#include "onegin.h"
 #include "stack.h"
 #include "constants.h"
-#include "onegin.h"
-
-#ifndef STACK_CONSTRUCT
-#define STACK_CONSTRUCT(name) stack_construct(name, #name)
-#endif
 
 enum commands_number
 {
@@ -50,19 +46,11 @@ struct cpu_struct
 {
     stack_t cpu_stack;
     stack_t func_stack;
-    elem_t reg_a;
-    elem_t reg_b;
-    elem_t reg_c;
-    elem_t reg_d;
+    elem_t reg_a = 0;
+    elem_t reg_b = 0;
+    elem_t reg_c = 0;
+    elem_t reg_d = 0;
     elem_t RAM[RAM_LENGTH] = {};             //alloc 1mb array to ram
-    cpu_struct(): reg_a(0),
-                  reg_b(0),
-                  reg_c(0),
-                  reg_d(0)
-        {
-            STACK_CONSTRUCT(&cpu_stack);
-            STACK_CONSTRUCT(&func_stack);
-        }
 };
 
 struct labels
@@ -98,14 +86,15 @@ int get_type_str_arg(char* arg_name, Commands* cmd);
 
 int split_line(pointer_on_line pointer, Commands* cmd);
 
-int make_binary_file                   (const char* input_name = INPUT_FILE,
-                                        const char* assembler = ASSEMBLER_FILE);
-int disassembler                       (const char* disasm_file = DISASSEMBLER_FILE,
+int make_binary_file                   (const char* input_name     = INPUT_FILE,
+                                        const char* assembler      = ASSEMBLER_FILE);
+int disassembler                       (const char* disasm_file    = DISASSEMBLER_FILE,
                                         const char* assembler_file = ASSEMBLER_FILE);
-int bin_to_txt                         (const char* assembler_file, char* &result_txt);
 
-int CPU (cpu_struct *processor,         const char* result_file = OUTPUT_FILE,
-                                        const char* binary_file = ASSEMBLER_FILE);
+int CPU (cpu_struct *processor,         const char* result_file    = OUTPUT_FILE,
+                                        const char* binary_file    = ASSEMBLER_FILE);
+
+int bin_to_txt                         (const char* assembler_file, char* &result_txt);
 
 int realloc_buffer(int* size_buf, char** asm_text, int writed, int resize_b);
 

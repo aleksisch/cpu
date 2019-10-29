@@ -245,7 +245,7 @@ long long int hash_bytes(char* start_pointer, char* end_pointer)
 
     long long int sum = 0;
 
-    int length = end_pointer - start_pointer;
+    int length = (int) (end_pointer - start_pointer);
     for (int i = 0; i < length; i++)
         sum+= (start_pointer[i]+1754) * 1267 * (i + 284);
 
