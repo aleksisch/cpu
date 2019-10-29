@@ -16,8 +16,8 @@ static const int S_LENGTH            = 255;                 //maximum string len
 static const int AVG_COMMAND         = 3;                   //average argument in command
 static const int LABELS_LENGTH       = 80;                  //max labels
 static const int RAM_LENGTH          = 10;                  //RAM size
-static const int STD_LENGTH_STACK     = 20;                 //default stack length
-static const int POISON_BYTE          = 127;                //poison for memset
-static const int POISON_STACK         = 23546862;           //canary in stack
+static const int STD_LENGTH_STACK    = 20;                  //default stack length
+static const int POISON_BYTE         = 127;                 //poison for memset
+static const int POISON_STACK        = 23546862;            //canary in stack
 
 #endif // CONSTANTS_H_INCLUDED

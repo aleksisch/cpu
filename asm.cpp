@@ -107,7 +107,7 @@ int get_lable(Data_labels* data_label, Commands* cur_cmd, int* writed, int *erro
             strcpy(data_label -> labels_arr[*l_number].name, cur_cmd->label_name+1);    //+1 to avoid ':'
         }
 
-        if (LABELS_LENGTH > *l_number) *error |= OVERFLOW_LABELS;
+        if (LABELS_LENGTH < *l_number) *error |= OVERFLOW_LABELS;
     }
     else if (cur_cmd->type_arg == LABEL)
     {
@@ -245,6 +245,7 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
     int readed    = 0;
     int size_asm  = 0;
     int writed    = 0;
+    int error     = OK;
 
     char *assembler  = (char*) readFile (assembler_file, &size_asm, "r+b");
 
@@ -298,7 +299,7 @@ int bin_to_txt(const char* assembler_file, char* &result_txt)
 
     free(assembler);
 
-    return OK;
+    return error;
 }
 
 
